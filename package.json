@@ -1,0 +1,14 @@
+{
+  "name": "reeldeal",
+  "version": "1.0.0",
+  "description": "ReelDeal Movie Discovery App",
+  "scripts": {
+    "install-all": "npm install && cd frontend && npm install",
+    "build": "cd frontend && npm run build",
+    "start": "cd backend && npm start",
+    "dev": "concurrently \"cd backend && npm run dev\" \"cd frontend && npm run dev\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
