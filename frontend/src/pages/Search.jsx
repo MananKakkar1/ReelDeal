@@ -6,6 +6,7 @@ import Spinner from "../components/common/Spinner";
 import Button from "../components/common/Button";
 import MovieCard from "../components/MovieCard";
 import SmartSearch from "../components/SmartSearch";
+import Pagination from "../components/common/Pagination";
 import { moviesAPI } from "../services/api";
 import { motion, AnimatePresence } from "framer-motion";
 import { Filter, X } from "lucide-react";
@@ -251,11 +252,12 @@ function Search() {
     genre: "",
     year: "",
     rating: "",
-    sortBy: "relevance",
+    sortBy: "popularity.desc",
   });
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [totalResults, setTotalResults] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
 
   const years = Array.from(
     { length: 30 },
@@ -263,33 +265,42 @@ function Search() {
   );
   const ratings = ["Any", "9+", "8+", "7+", "6+", "5+"];
   const sortOptions = [
-    { value: "relevance", label: "Relevance" },
-    { value: "rating", label: "Rating" },
-    { value: "date", label: "Release Date" },
-    { value: "title", label: "Title" },
+    { value: "popularity.desc", label: "Popularity" },
+    { value: "vote_average.desc", label: "Rating" },
+    { value: "release_date.desc", label: "Release Date" },
+    { value: "title.asc", label: "Title A-Z" },
+    { value: "title.desc", label: "Title Z-A" },
   ];
 
-  const handleSearch = async (query = searchQuery) => {
-    if (!query.trim()) {
-      setMovies([]);
-      setTotalResults(0);
-      return;
-    }
-
+  const fetchMovies = async () => {
     setLoading(true);
     try {
       const params = {
-        query,
         page: currentPage,
-        ...filters,
+        sort_by: filters.sortBy,
+        ...(filters.year && { year: filters.year }),
+        ...(filters.rating &&
+          filters.rating !== "Any" && { rating: filters.rating }),
+        ...(filters.genre && { genre: filters.genre }),
       };
 
-      const response = await moviesAPI.search(query, params);
+      let response;
+      if (searchQuery.trim()) {
+        // Search with query
+        response = await moviesAPI.search(searchQuery, params);
+      } else {
+        // Get all movies when search field is empty
+        response = await moviesAPI.getAllMovies(params);
+      }
+
       setMovies(response.data.data.movies);
       setTotalResults(response.data.data.totalResults);
+      setTotalPages(response.data.data.totalPages);
     } catch (error) {
-      console.error("Search error:", error);
+      console.error("Fetch movies error:", error);
       setMovies([]);
+      setTotalResults(0);
+      setTotalPages(0);
     } finally {
       setLoading(false);
     }
@@ -302,15 +313,14 @@ function Search() {
 
   const clearSearch = () => {
     setSearchQuery("");
-    setMovies([]);
-    setTotalResults(0);
+    setCurrentPage(1);
     setFilters({
       genre: "",
       year: "",
       rating: "",
-      sortBy: "relevance",
+      sortBy: "popularity.desc",
     });
-    setCurrentPage(1);
+    // This will trigger the useEffect to fetch all movies
   };
 
   const handleFilterChange = (filterName, value) => {
@@ -319,18 +329,27 @@ function Search() {
       [filterName]: value,
     }));
     setCurrentPage(1);
+    // This will trigger the useEffect to fetch movies with new filters
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    handleSearch();
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  // Initial load - fetch all movies when component mounts
   useEffect(() => {
-    if (searchQuery) {
-      handleSearch();
-    }
-  }, [filters, currentPage]);
+    fetchMovies();
+  }, []);
+
+  // Debounced search effect - handle dynamic search and filter changes
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      fetchMovies();
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery, filters, currentPage]);
 
   return (
     <SearchContainer>
@@ -345,6 +364,8 @@ function Search() {
         <SmartSearch
           placeholder="Search for movies, actors, or genres..."
           onSelect={handleSmartSearchSelect}
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
         />
       </SearchSection>
 
@@ -471,21 +492,30 @@ function Search() {
         </FilterSection>
       </DesktopFilterSection>
 
-      {movies.length > 0 && (
-        <ResultsSection>
-          <ResultsHeader>
-            <ResultsCount>Found {totalResults} movies</ResultsCount>
+      <ResultsSection>
+        <ResultsHeader>
+          <ResultsCount>
+            {searchQuery
+              ? `Found ${totalResults} movies for "${searchQuery}"`
+              : `Showing ${totalResults} movies from our database`}
+          </ResultsCount>
+          {(searchQuery ||
+            filters.genre ||
+            filters.year ||
+            filters.rating !== "Any") && (
             <ClearButton onClick={clearSearch}>
               <X size={16} />
-              Clear Search
+              Clear Filters
             </ClearButton>
-          </ResultsHeader>
+          )}
+        </ResultsHeader>
 
-          {loading ? (
-            <div style={{ textAlign: "center", padding: "2rem" }}>
-              <Spinner />
-            </div>
-          ) : (
+        {loading ? (
+          <div style={{ textAlign: "center", padding: "2rem" }}>
+            <Spinner />
+          </div>
+        ) : (
+          <>
             <MoviesGrid
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -495,24 +525,28 @@ function Search() {
                 <MovieCard key={movie.id} movie={movie} />
               ))}
             </MoviesGrid>
-          )}
-        </ResultsSection>
-      )}
 
-      {!loading && searchQuery && movies.length === 0 && (
+            {totalPages > 1 && (
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+                totalResults={totalResults}
+                itemsPerPage={20}
+              />
+            )}
+          </>
+        )}
+      </ResultsSection>
+
+      {!loading && movies.length === 0 && (
         <EmptyState>
           <EmptyIcon>🎬</EmptyIcon>
           <EmptyTitle>No movies found</EmptyTitle>
-          <EmptyText>Try adjusting your search terms or filters</EmptyText>
-        </EmptyState>
-      )}
-
-      {!searchQuery && !loading && (
-        <EmptyState>
-          <EmptyIcon>🔍</EmptyIcon>
-          <EmptyTitle>Start your search</EmptyTitle>
           <EmptyText>
-            Search for movies, actors, or genres to discover new films
+            {searchQuery
+              ? "Try adjusting your search terms or filters"
+              : "No movies match your current filters. Try adjusting your filter settings."}
           </EmptyText>
         </EmptyState>
       )}

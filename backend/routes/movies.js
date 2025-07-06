@@ -322,25 +322,174 @@ router.get('/upcoming', optionalAuth, async (req, res) => {
   }
 });
 
-// Search movies
-router.get('/search', validateSearch, optionalAuth, async (req, res) => {
+// Get all movies with pagination
+router.get('/all', optionalAuth, async (req, res) => {
   try {
-    const { query, page = 1, include_adult = false } = req.query;
-    
-    if (!query) {
-      return res.status(400).json({
+    // Check if TMDB API key is configured
+    if (!TMDB_API_KEY || TMDB_API_KEY === 'your-tmdb-api-key-here') {
+      return res.status(500).json({
         success: false,
-        message: 'Search query is required'
+        message: 'TMDB API key is not configured. Please set TMDB_API_KEY in your .env file'
+      });
+    }
+    
+    const { 
+      page = 1, 
+      sort_by = 'popularity.desc',
+      year,
+      rating,
+      genre,
+      include_adult = false 
+    } = req.query;
+    
+    // Build TMDB discover parameters
+    const discoverParams = {
+      api_key: TMDB_API_KEY,
+      page,
+      sort_by,
+      include_adult
+    };
+
+    // Add filters if provided
+    if (year) {
+      discoverParams.primary_release_year = year;
+    }
+    if (rating) {
+      discoverParams['vote_average.gte'] = rating.replace('+', '');
+    }
+    if (genre) {
+      discoverParams.with_genres = genre;
+    }
+
+    const response = await axios.get(`${TMDB_BASE_URL}/discover/movie`, {
+      params: discoverParams
+    });
+
+    const movies = response.data.results;
+    
+    // Add user interaction data if authenticated
+    if (req.user) {
+      const movieIds = movies.map(m => m.id);
+      const userMovies = await Movie.find({
+        tmdbId: { $in: movieIds },
+        'userRatings.user': req.user._id
+      });
+
+      movies.forEach(movie => {
+        const userMovie = userMovies.find(um => um.tmdbId === movie.id);
+        if (userMovie) {
+          const userRating = userMovie.userRatings.find(ur => ur.user.toString() === req.user._id.toString());
+          movie.userInteraction = {
+            rating: userRating?.rating,
+            watched: userRating?.watched,
+            watchlist: userRating?.watchlist,
+            favorite: userRating?.favorite
+          };
+        }
       });
     }
 
-    const response = await axios.get(`${TMDB_BASE_URL}/search/movie`, {
-      params: {
-        api_key: TMDB_API_KEY,
-        query,
-        page,
-        include_adult
+    res.json({
+      success: true,
+      data: {
+        movies,
+        page: response.data.page,
+        totalPages: response.data.total_pages,
+        totalResults: response.data.total_results
       }
+    });
+  } catch (error) {
+    console.error('Get all movies error:', error);
+    
+    if (error.response?.status === 401) {
+      res.status(500).json({
+        success: false,
+        message: 'Invalid TMDB API key'
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        message: 'Failed to fetch movies'
+      });
+    }
+  }
+});
+
+// Search movies
+router.get('/search', validateSearch, optionalAuth, async (req, res) => {
+  try {
+    const { query, page = 1, include_adult = false, sort_by, year, rating, genre } = req.query;
+    
+    // If no query provided, return all movies (same as /all endpoint)
+    if (!query || !query.trim()) {
+      // Build TMDB discover parameters
+      const discoverParams = {
+        api_key: TMDB_API_KEY,
+        page,
+        sort_by: sort_by || 'popularity.desc',
+        include_adult
+      };
+
+      // Add filters if provided
+      if (year) {
+        discoverParams.primary_release_year = year;
+      }
+      if (rating) {
+        discoverParams['vote_average.gte'] = rating.replace('+', '');
+      }
+      if (genre) {
+        discoverParams.with_genres = genre;
+      }
+
+      const response = await axios.get(`${TMDB_BASE_URL}/discover/movie`, {
+        params: discoverParams
+      });
+
+      const movies = response.data.results;
+      
+      // Add user interaction data if authenticated
+      if (req.user) {
+        const movieIds = movies.map(m => m.id);
+        const userMovies = await Movie.find({
+          tmdbId: { $in: movieIds },
+          'userRatings.user': req.user._id
+        });
+
+        movies.forEach(movie => {
+          const userMovie = userMovies.find(um => um.tmdbId === movie.id);
+          if (userMovie) {
+            const userRating = userMovie.userRatings.find(ur => ur.user.toString() === req.user._id.toString());
+            movie.userInteraction = {
+              rating: userRating?.rating,
+              watched: userRating?.watched,
+              watchlist: userRating?.watchlist,
+              favorite: userRating?.favorite
+            };
+          }
+        });
+      }
+
+      return res.json({
+        success: true,
+        data: {
+          movies,
+          page: response.data.page,
+          totalPages: response.data.total_pages,
+          totalResults: response.data.total_results
+        }
+      });
+    }
+
+    // If query provided, perform search
+    const searchParams = {
+      api_key: TMDB_API_KEY,
+      query,
+      page,
+      include_adult
+    };
+
+    const response = await axios.get(`${TMDB_BASE_URL}/search/movie`, {
+      params: searchParams
     });
 
     const movies = response.data.results;

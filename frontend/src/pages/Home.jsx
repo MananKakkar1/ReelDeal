@@ -6,6 +6,7 @@ import SectionTitle from "../components/common/SectionTitle";
 import Spinner from "../components/common/Spinner";
 import Button from "../components/common/Button";
 import SmartSearch from "../components/SmartSearch";
+import Pagination from "../components/common/Pagination";
 import { moviesAPI } from "../services/api";
 import { motion } from "framer-motion";
 import { Sparkles } from "lucide-react";
@@ -107,20 +108,36 @@ function Home() {
   const [selectedGenre, setSelectedGenre] = useState(null);
   const [loading, setLoading] = useState(false);
   const [empty, setEmpty] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalResults, setTotalResults] = useState(0);
   const navigate = useNavigate();
 
-  useEffect(() => {
+  const fetchMovies = (page = 1) => {
     setLoading(true);
-    moviesAPI
-      .getTrending({ time_window: "week" })
+    const params = { page };
+
+    const apiCall = selectedGenre
+      ? moviesAPI.getByGenre(selectedGenre, params)
+      : moviesAPI.getTrending({ time_window: "week", ...params });
+
+    apiCall
       .then((response) => {
         const movieData = response.data.data.movies || [];
         setMovies(movieData);
+        setTotalPages(response.data.data.totalPages || 0);
+        setTotalResults(response.data.data.totalResults || 0);
         setEmpty(!movieData.length);
       })
       .catch(() => setEmpty(true))
       .finally(() => setLoading(false));
+  };
 
+  useEffect(() => {
+    fetchMovies(currentPage);
+  }, [currentPage, selectedGenre]);
+
+  useEffect(() => {
     // Fetch genres from API
     moviesAPI
       .getGenres()
@@ -128,7 +145,10 @@ function Home() {
         setGenres(response.data.data.genres || []);
       })
       .catch((error) => {
-        console.warn('Failed to fetch genres from API, using fallback:', error.message);
+        console.warn(
+          "Failed to fetch genres from API, using fallback:",
+          error.message
+        );
         // Fallback to static genres if API fails
         const staticGenres = [
           { id: 28, name: "Action" },
@@ -162,30 +182,17 @@ function Home() {
 
   const handleGenre = (genreId) => {
     setSelectedGenre(genreId);
-    setLoading(true);
-    moviesAPI
-      .getByGenre(genreId)
-      .then((response) => {
-        const movieData = response.data.data.movies || [];
-        setMovies(movieData);
-        setEmpty(!movieData.length);
-      })
-      .catch(() => setEmpty(true))
-      .finally(() => setLoading(false));
+    setCurrentPage(1);
   };
 
   const clearGenre = () => {
     setSelectedGenre(null);
-    setLoading(true);
-    moviesAPI
-      .getTrending({ time_window: "week" })
-      .then((response) => {
-        const movieData = response.data.data.movies || [];
-        setMovies(movieData);
-        setEmpty(!movieData.length);
-      })
-      .catch(() => setEmpty(true))
-      .finally(() => setLoading(false));
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleSurpriseMe = () => {
@@ -195,7 +202,7 @@ function Home() {
       navigate(`/movie/${randomMovie.id}`);
     } else {
       // If no movies loaded, navigate to recommendations
-      navigate('/recommendations');
+      navigate("/recommendations");
     }
   };
 
@@ -213,7 +220,7 @@ function Home() {
             onSelect={handleSmartSearchSelect}
           />
         </SearchSection>
-        
+
         <SurpriseButton onClick={handleSurpriseMe}>
           <Sparkles size={20} />
           Surprise Me!
@@ -232,26 +239,38 @@ function Home() {
             <Spinner />
           </div>
         ) : movies.length > 0 ? (
-          <MoviesGrid
-            initial="hidden"
-            animate="visible"
-            variants={{
-              hidden: {},
-              visible: { transition: { staggerChildren: 0.07 } },
-            }}
-          >
-            {movies.map((movie) => (
-              <motion.div
-                key={movie.id}
-                variants={{
-                  hidden: { opacity: 0, y: 30 },
-                  visible: { opacity: 1, y: 0 },
-                }}
-              >
-                <MovieCard movie={movie} />
-              </motion.div>
-            ))}
-          </MoviesGrid>
+          <>
+            <MoviesGrid
+              initial="hidden"
+              animate="visible"
+              variants={{
+                hidden: {},
+                visible: { transition: { staggerChildren: 0.07 } },
+              }}
+            >
+              {movies.map((movie) => (
+                <motion.div
+                  key={movie.id}
+                  variants={{
+                    hidden: { opacity: 0, y: 30 },
+                    visible: { opacity: 1, y: 0 },
+                  }}
+                >
+                  <MovieCard movie={movie} />
+                </motion.div>
+              ))}
+            </MoviesGrid>
+
+            {totalPages > 1 && (
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+                totalResults={totalResults}
+                itemsPerPage={20}
+              />
+            )}
+          </>
         ) : (
           <EmptyState>
             {empty

@@ -23,6 +23,7 @@ import Section from "../components/common/Section";
 import SectionTitle from "../components/common/SectionTitle";
 import Spinner from "../components/common/Spinner";
 import Card from "../components/common/Card";
+import Pagination from "../components/common/Pagination";
 import { usersAPI, moviesAPI } from "../services/api";
 import toast from "react-hot-toast";
 
@@ -559,6 +560,9 @@ function WatchedMovies() {
   const [filter, setFilter] = useState("all");
   const [sortBy, setSortBy] = useState("watched");
   const [sortOrder, setSortOrder] = useState("desc");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalResults, setTotalResults] = useState(0);
   const [stats, setStats] = useState({
     totalMovies: 0,
     averageRating: 0,
@@ -585,17 +589,28 @@ function WatchedMovies() {
     calculateStats();
   }, [watchedMovies]);
 
-  const fetchWatchedMovies = async () => {
+  const fetchWatchedMovies = async (page = 1) => {
     try {
       setLoading(true);
-      const response = await usersAPI.getCurrentUserWatched();
-      setWatchedMovies(response.data.data || []);
+      const response = await usersAPI.getCurrentUserWatched({ page });
+      const watchedData = response.data.data?.watched || [];
+      const paginationData = response.data.data?.pagination || {};
+
+      setWatchedMovies(watchedData);
+      setTotalPages(paginationData.totalPages || 0);
+      setTotalResults(paginationData.totalResults || 0);
     } catch (error) {
       console.error("Error fetching watched movies:", error);
       toast.error("Failed to load watched movies");
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    fetchWatchedMovies(page);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const calculateStats = () => {
@@ -894,83 +909,95 @@ function WatchedMovies() {
           <Spinner />
         </div>
       ) : filteredAndSortedMovies.length > 0 ? (
-        <MoviesGrid>
-          <AnimatePresence>
-            {filteredAndSortedMovies.map((movie, index) => (
-              <WatchedCard
-                key={movie.id}
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -30 }}
-                transition={{ delay: index * 0.1 }}
-              >
-                <div onClick={() => handleMovieClick(movie)}>
-                  <MoviePoster
-                    src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
-                    alt={movie.title}
-                    onError={(e) => {
-                      e.target.src = "/placeholder-poster.jpg";
-                    }}
-                  />
-                  <MovieInfo>
-                    <MovieTitle>{movie.title}</MovieTitle>
+        <>
+          <MoviesGrid>
+            <AnimatePresence>
+              {filteredAndSortedMovies.map((movie, index) => (
+                <WatchedCard
+                  key={movie.id}
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -30 }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <div onClick={() => handleMovieClick(movie)}>
+                    <MoviePoster
+                      src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
+                      alt={movie.title}
+                      onError={(e) => {
+                        e.target.src = "/placeholder-poster.jpg";
+                      }}
+                    />
+                    <MovieInfo>
+                      <MovieTitle>{movie.title}</MovieTitle>
 
-                    <MovieMeta>
-                      <Rating>
-                        <Star size={14} fill="#fbbf24" />
-                        {movie.vote_average?.toFixed(1) || "N/A"}
-                      </Rating>
-                      <Year>{new Date(movie.release_date).getFullYear()}</Year>
-                      {movie.userRating && (
-                        <UserRating>
-                          <Star size={14} fill="#10b981" />
-                          {movie.userRating}/5
-                        </UserRating>
+                      <MovieMeta>
+                        <Rating>
+                          <Star size={14} fill="#fbbf24" />
+                          {movie.vote_average?.toFixed(1) || "N/A"}
+                        </Rating>
+                        <Year>{new Date(movie.release_date).getFullYear()}</Year>
+                        {movie.userRating && (
+                          <UserRating>
+                            <Star size={14} fill="#10b981" />
+                            {movie.userRating}/5
+                          </UserRating>
+                        )}
+                      </MovieMeta>
+
+                      {movie.watchedDate && (
+                        <WatchedDate>
+                          Watched:{" "}
+                          {new Date(movie.watchedDate).toLocaleDateString()}
+                        </WatchedDate>
                       )}
-                    </MovieMeta>
 
-                    {movie.watchedDate && (
-                      <WatchedDate>
-                        Watched:{" "}
-                        {new Date(movie.watchedDate).toLocaleDateString()}
-                      </WatchedDate>
-                    )}
+                      {movie.review && <ReviewText>"{movie.review}"</ReviewText>}
 
-                    {movie.review && <ReviewText>"{movie.review}"</ReviewText>}
+                      <GenreTags>
+                        {movie.genres?.slice(0, 2).map((genre) => (
+                          <GenreTag key={genre}>{genre}</GenreTag>
+                        ))}
+                      </GenreTags>
+                    </MovieInfo>
+                  </div>
 
-                    <GenreTags>
-                      {movie.genres?.slice(0, 2).map((genre) => (
-                        <GenreTag key={genre}>{genre}</GenreTag>
-                      ))}
-                    </GenreTags>
-                  </MovieInfo>
-                </div>
+                  <ActionButtons>
+                    <ActionButton
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEditMovie(movie);
+                      }}
+                    >
+                      <Edit size={16} />
+                      Edit
+                    </ActionButton>
+                    <ActionButton
+                      variant="danger"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRemoveFromWatched(movie.id);
+                      }}
+                    >
+                      <Trash2 size={16} />
+                      Remove
+                    </ActionButton>
+                  </ActionButtons>
+                </WatchedCard>
+              ))}
+            </AnimatePresence>
+          </MoviesGrid>
 
-                <ActionButtons>
-                  <ActionButton
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleEditMovie(movie);
-                    }}
-                  >
-                    <Edit size={16} />
-                    Edit
-                  </ActionButton>
-                  <ActionButton
-                    variant="danger"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleRemoveFromWatched(movie.id);
-                    }}
-                  >
-                    <Trash2 size={16} />
-                    Remove
-                  </ActionButton>
-                </ActionButtons>
-              </WatchedCard>
-            ))}
-          </AnimatePresence>
-        </MoviesGrid>
+          {totalPages > 1 && (
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+              totalResults={totalResults}
+              itemsPerPage={20}
+            />
+          )}
+        </>
       ) : (
         <EmptyState>
           <EmptyIcon>🎬</EmptyIcon>

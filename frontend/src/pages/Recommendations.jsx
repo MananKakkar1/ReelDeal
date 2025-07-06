@@ -21,6 +21,7 @@ import SectionTitle from "../components/common/SectionTitle";
 import Spinner from "../components/common/Spinner";
 import Card from "../components/common/Card";
 import MovieCard from "../components/MovieCard";
+import Pagination from "../components/common/Pagination";
 import { moviesAPI, usersAPI } from "../services/api";
 import toast from "react-hot-toast";
 
@@ -243,6 +244,9 @@ function Recommendations() {
   const [analyzing, setAnalyzing] = useState(true);
   const [filter, setFilter] = useState("all");
   const [userPreferences, setUserPreferences] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalResults, setTotalResults] = useState(0);
   const [stats, setStats] = useState({
     totalWatched: 0,
     averageRating: 0,
@@ -260,9 +264,9 @@ function Recommendations() {
       // Fetch watched movies from backend API
       const response = await usersAPI.getCurrentUserWatched();
       const watchedMovies = response.data.data || [];
-      
-      console.log('Watched Movies Response:', response);
-      console.log('Watched Movies:', watchedMovies);
+
+      console.log("Watched Movies Response:", response);
+      console.log("Watched Movies:", watchedMovies);
 
       if (watchedMovies.length === 0) {
         setStats({
@@ -315,7 +319,7 @@ function Recommendations() {
     }
   };
 
-  const generateRecommendations = async () => {
+  const generateRecommendations = async (page = 1) => {
     if (!userPreferences || userPreferences.watchedMovies.length === 0) {
       toast.error("Please add some movies to your watched list first!");
       return;
@@ -323,9 +327,10 @@ function Recommendations() {
 
     setLoading(true);
     try {
-      // Get recommendations from backend API
-      const response = await usersAPI.getRecommendations();
-      const apiRecommendations = response.data.data || [];
+      // Get recommendations from backend API with pagination
+      const response = await usersAPI.getRecommendations({ page });
+      const apiRecommendations = response.data.data?.recommendations || [];
+      const paginationData = response.data.data?.pagination || {};
 
       console.log("API Recommendations:", apiRecommendations);
 
@@ -344,6 +349,8 @@ function Recommendations() {
         );
 
         setRecommendations(recommendationsWithInteraction);
+        setTotalPages(paginationData.totalPages || 0);
+        setTotalResults(paginationData.totalResults || 0);
         toast.success(
           `Generated ${apiRecommendations.length} personalized recommendations!`
         );
@@ -351,6 +358,8 @@ function Recommendations() {
         // Fallback to mock recommendations if API doesn't return data
         const mockRecommendations = generateMockRecommendations();
         setRecommendations(mockRecommendations);
+        setTotalPages(1);
+        setTotalResults(mockRecommendations.length);
         toast.success(
           `Generated ${mockRecommendations.length} personalized recommendations!`
         );
@@ -360,12 +369,20 @@ function Recommendations() {
       // Fallback to mock recommendations on error
       const mockRecommendations = generateMockRecommendations();
       setRecommendations(mockRecommendations);
+      setTotalPages(1);
+      setTotalResults(mockRecommendations.length);
       toast.success(
         `Generated ${mockRecommendations.length} personalized recommendations!`
       );
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    generateRecommendations(page);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const generateMockRecommendations = () => {
@@ -563,21 +580,33 @@ function Recommendations() {
       </Controls>
 
       {recommendations.length > 0 ? (
-        <MoviesGrid>
-          <AnimatePresence>
-            {filteredRecommendations.map((movie, index) => (
-              <motion.div
-                key={movie.id}
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -30 }}
-                transition={{ delay: index * 0.1 }}
-              >
-                <MovieCard movie={movie} />
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </MoviesGrid>
+        <>
+          <MoviesGrid>
+            <AnimatePresence>
+              {filteredRecommendations.map((movie, index) => (
+                <motion.div
+                  key={movie.id}
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -30 }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <MovieCard movie={movie} />
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </MoviesGrid>
+
+          {totalPages > 1 && (
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+              totalResults={totalResults}
+              itemsPerPage={20}
+            />
+          )}
+        </>
       ) : (
         <EmptyState>
           <EmptyIcon>🎬</EmptyIcon>
@@ -609,10 +638,9 @@ function Recommendations() {
             <LoadingContent>
               <Spinner />
               <LoadingText>
-                {analyzing 
-                  ? "Loading your movie preferences..." 
-                  : "Analyzing your preferences and finding the perfect movies..."
-                }
+                {analyzing
+                  ? "Loading your movie preferences..."
+                  : "Analyzing your preferences and finding the perfect movies..."}
               </LoadingText>
             </LoadingContent>
           </LoadingOverlay>

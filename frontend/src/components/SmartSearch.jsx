@@ -230,8 +230,10 @@ const SmartSearch = ({
   placeholder = "Search movies...",
   onSelect,
   className,
+  value = "",
+  onChange,
 }) => {
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(value);
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -239,6 +241,11 @@ const SmartSearch = ({
   const searchTimeoutRef = useRef(null);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
+
+  // Update internal query when external value changes
+  useEffect(() => {
+    setQuery(value);
+  }, [value]);
 
   // Debounced search function
   const searchMovies = useCallback(async (searchQuery) => {
@@ -266,6 +273,11 @@ const SmartSearch = ({
     const value = e.target.value;
     setQuery(value);
     setSelectedIndex(-1);
+
+    // Call external onChange if provided
+    if (onChange) {
+      onChange(e);
+    }
 
     // Clear previous timeout
     if (searchTimeoutRef.current) {

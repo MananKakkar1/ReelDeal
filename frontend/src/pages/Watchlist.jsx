@@ -20,6 +20,7 @@ import Section from "../components/common/Section";
 import SectionTitle from "../components/common/SectionTitle";
 import Spinner from "../components/common/Spinner";
 import Card from "../components/common/Card";
+import Pagination from "../components/common/Pagination";
 import { usersAPI, moviesAPI } from "../services/api";
 import toast from "react-hot-toast";
 
@@ -343,6 +344,9 @@ function Watchlist() {
   const [filter, setFilter] = useState("all");
   const [sortBy, setSortBy] = useState("added");
   const [sortOrder, setSortOrder] = useState("desc");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalResults, setTotalResults] = useState(0);
   const [stats, setStats] = useState({
     totalMovies: 0,
     averageRating: 0,
@@ -357,17 +361,28 @@ function Watchlist() {
     calculateStats();
   }, [watchlist]);
 
-  const fetchWatchlist = async () => {
+  const fetchWatchlist = async (page = 1) => {
     try {
       setLoading(true);
-      const response = await usersAPI.getCurrentUserWatchlist();
-      setWatchlist(response.data.data || []);
+      const response = await usersAPI.getCurrentUserWatchlist({ page });
+      const watchlistData = response.data.data?.watchlist || [];
+      const paginationData = response.data.data?.pagination || {};
+      
+      setWatchlist(watchlistData);
+      setTotalPages(paginationData.totalPages || 0);
+      setTotalResults(paginationData.totalResults || 0);
     } catch (error) {
       console.error("Error fetching watchlist:", error);
       toast.error("Failed to load watchlist");
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    fetchWatchlist(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const calculateStats = () => {
@@ -578,68 +593,80 @@ function Watchlist() {
           <Spinner />
         </div>
       ) : filteredAndSortedMovies.length > 0 ? (
-        <MoviesGrid>
-          <AnimatePresence>
-            {filteredAndSortedMovies.map((movie, index) => (
-              <WatchlistCard
-                key={movie.id}
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -30 }}
-                transition={{ delay: index * 0.1 }}
-              >
-                <div onClick={() => handleMovieClick(movie)}>
-                  <MoviePoster
-                    src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
-                    alt={movie.title}
-                    onError={(e) => {
-                      e.target.src = "/placeholder-poster.jpg";
-                    }}
-                  />
-                  <MovieInfo>
-                    <MovieTitle>{movie.title}</MovieTitle>
+        <>
+          <MoviesGrid>
+            <AnimatePresence>
+              {filteredAndSortedMovies.map((movie, index) => (
+                <WatchlistCard
+                  key={movie.id}
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -30 }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <div onClick={() => handleMovieClick(movie)}>
+                    <MoviePoster
+                      src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
+                      alt={movie.title}
+                      onError={(e) => {
+                        e.target.src = "/placeholder-poster.jpg";
+                      }}
+                    />
+                    <MovieInfo>
+                      <MovieTitle>{movie.title}</MovieTitle>
 
-                    <MovieMeta>
-                      <Rating>
-                        <Star size={14} fill="#fbbf24" />
-                        {movie.vote_average?.toFixed(1) || "N/A"}
-                      </Rating>
-                      <Year>{new Date(movie.release_date).getFullYear()}</Year>
-                    </MovieMeta>
+                      <MovieMeta>
+                        <Rating>
+                          <Star size={14} fill="#fbbf24" />
+                          {movie.vote_average?.toFixed(1) || "N/A"}
+                        </Rating>
+                        <Year>{new Date(movie.release_date).getFullYear()}</Year>
+                      </MovieMeta>
 
-                    <GenreTags>
-                      {movie.genres?.slice(0, 2).map((genre) => (
-                        <GenreTag key={genre}>{genre}</GenreTag>
-                      ))}
-                    </GenreTags>
-                  </MovieInfo>
-                </div>
+                      <GenreTags>
+                        {movie.genres?.slice(0, 2).map((genre) => (
+                          <GenreTag key={genre}>{genre}</GenreTag>
+                        ))}
+                      </GenreTags>
+                    </MovieInfo>
+                  </div>
 
-                <ActionButtons>
-                  <ActionButton
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleMarkAsWatched(movie.id);
-                    }}
-                  >
-                    <Eye size={16} />
-                    Mark Watched
-                  </ActionButton>
-                  <ActionButton
-                    variant="danger"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleRemoveFromWatchlist(movie.id);
-                    }}
-                  >
-                    <Trash2 size={16} />
-                    Remove
-                  </ActionButton>
-                </ActionButtons>
-              </WatchlistCard>
-            ))}
-          </AnimatePresence>
-        </MoviesGrid>
+                  <ActionButtons>
+                    <ActionButton
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleMarkAsWatched(movie.id);
+                      }}
+                    >
+                      <Eye size={16} />
+                      Mark Watched
+                    </ActionButton>
+                    <ActionButton
+                      variant="danger"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRemoveFromWatchlist(movie.id);
+                      }}
+                    >
+                      <Trash2 size={16} />
+                      Remove
+                    </ActionButton>
+                  </ActionButtons>
+                </WatchlistCard>
+              ))}
+            </AnimatePresence>
+          </MoviesGrid>
+
+          {totalPages > 1 && (
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+              totalResults={totalResults}
+              itemsPerPage={20}
+            />
+          )}
+        </>
       ) : (
         <EmptyState>
           <EmptyIcon>📝</EmptyIcon>

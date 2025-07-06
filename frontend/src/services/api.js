@@ -62,6 +62,7 @@ export const moviesAPI = {
   getPopular: (params = {}) => api.get('/movies/popular', { params }),
   getTopRated: (params = {}) => api.get('/movies/top-rated', { params }),
   getUpcoming: (params = {}) => api.get('/movies/upcoming', { params }),
+  getAllMovies: (params = {}) => api.get('/movies/all', { params }),
   search: (query, params = {}) => api.get('/movies/search', { params: { query, ...params } }),
   getDetails: (movieId) => api.get(`/movies/${movieId}`),
   rateMovie: (movieId, ratingData) => api.post(`/movies/${movieId}/rate`, ratingData),
