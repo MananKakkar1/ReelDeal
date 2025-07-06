@@ -97,8 +97,7 @@ const movieSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Index for efficient queries
-movieSchema.index({ tmdbId: 1 });
+// Index for efficient queries (removed duplicate tmdbId index)
 movieSchema.index({ title: 'text', overview: 'text' });
 movieSchema.index({ genres: 1 });
 movieSchema.index({ releaseDate: -1 });
