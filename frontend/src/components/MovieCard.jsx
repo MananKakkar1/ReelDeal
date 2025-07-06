@@ -88,9 +88,9 @@ const BookmarkButton = styled(motion.button)`
   position: absolute;
   top: 0.75rem;
   right: 0.75rem;
-  background: rgba(15, 23, 42, 0.8);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(148, 163, 184, 0.3);
   border-radius: 50%;
   width: 2.5rem;
   height: 2.5rem;
@@ -103,10 +103,11 @@ const BookmarkButton = styled(motion.button)`
   z-index: 10;
 
   &:hover {
-    background: rgba(6, 182, 212, 0.1);
-    border-color: rgba(6, 182, 212, 0.3);
+    background: rgba(6, 182, 212, 0.15);
+    border-color: rgba(6, 182, 212, 0.4);
     color: #06b6d4;
     transform: scale(1.1);
+    box-shadow: 0 4px 16px rgba(6, 182, 212, 0.2);
   }
 
   &:active {
@@ -186,8 +187,8 @@ function MovieCard({ movie }) {
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         whileHover={{
-          scale: 1.02,
-          boxShadow: "0 8px 32px rgba(6,182,212,0.18)",
+          scale: 1.03,
+          y: -5,
         }}
         transition={{ type: "spring", stiffness: 120, damping: 18 }}
       >
@@ -195,8 +196,8 @@ function MovieCard({ movie }) {
           <Poster
             src={getPosterUrl(movie.poster_path)}
             alt={movie.title}
-            whileHover={{ opacity: 0.92 }}
-            transition={{ duration: 0.2 }}
+            whileHover={{ opacity: 0.95 }}
+            transition={{ duration: 0.3 }}
             onError={(e) => {
               e.target.style.display = "none";
               e.target.nextSibling.style.display = "flex";
@@ -231,7 +232,10 @@ function MovieCard({ movie }) {
             transition={{ delay: 0.1 }}
           >
             <BookmarkIcon>
-              <Bookmark size={18} fill={isBookmarked ? "currentColor" : "none"} />
+              <Bookmark
+                size={18}
+                fill={isBookmarked ? "currentColor" : "none"}
+              />
             </BookmarkIcon>
           </BookmarkButton>
 
