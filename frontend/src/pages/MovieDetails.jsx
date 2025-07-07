@@ -517,14 +517,29 @@ function MovieDetails() {
 
     setIsLoading(true);
     try {
-      const updateData = {};
-      updateData[action] = value;
+      // Always send both flags for clarity
+      let updateData = {};
+      if (action === "watchlist") {
+        updateData = {
+          watchlist: value,
+          watched: value ? false : userInteraction.watched,
+        };
+      } else if (action === "watched") {
+        updateData = {
+          watched: value,
+          watchlist: value ? false : userInteraction.watchlist,
+        };
+      } else {
+        updateData[action] = value;
+      }
 
       await moviesAPI.rateMovie(movieId, updateData);
 
       setUserInteraction((prev) => ({
         ...prev,
         [action]: value,
+        ...(action === "watchlist" && value ? { watched: false } : {}),
+        ...(action === "watched" && value ? { watchlist: false } : {}),
       }));
 
       const actionMessages = {
@@ -534,6 +549,8 @@ function MovieDetails() {
       };
 
       toast.success(actionMessages[action]);
+      // Optionally, trigger a callback to re-fetch lists if needed
+      // if (onUpdate) onUpdate();
     } catch (error) {
       console.error(`Error updating ${action}:`, error);
       toast.error(`Failed to update ${action}`);

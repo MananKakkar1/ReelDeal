@@ -721,6 +721,12 @@ router.post('/:movieId/rate', authenticateToken, validateMovieRating, async (req
       favorite: favorite || false,
       watchedDate: watchedDate ? new Date(watchedDate) : (watched ? new Date() : null)
     };
+    // Enforce mutual exclusivity
+    if (ratingData.watched) {
+      ratingData.watchlist = false;
+    } else if (ratingData.watchlist) {
+      ratingData.watched = false;
+    }
 
     if (existingRatingIndex > -1) {
       // Update existing rating
