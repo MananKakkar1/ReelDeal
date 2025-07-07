@@ -121,7 +121,7 @@ const BookmarkIcon = styled(motion.div)`
   justify-content: center;
 `;
 
-function MovieCard({ movie }) {
+function MovieCard({ movie, onBookmark }) {
   const { isAuthenticated } = useAuthStore();
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -162,13 +162,19 @@ function MovieCard({ movie }) {
         setIsBookmarked(false);
         toast.success("Removed from watchlist");
       } else {
-        // Add to watchlist
+        // Add to watchlist, send full movie info
         await moviesAPI.rateMovie(movie.id, {
           watchlist: true,
+          title: movie.title,
+          poster_path: movie.poster_path,
+          release_date: movie.release_date,
+          vote_average: movie.vote_average,
+          genres: movie.genres,
         });
         setIsBookmarked(true);
         toast.success("Added to watchlist");
       }
+      if (onBookmark) onBookmark();
     } catch (error) {
       console.error("Error updating watchlist:", error);
       toast.error(

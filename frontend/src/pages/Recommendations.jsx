@@ -591,7 +591,10 @@ function Recommendations() {
                   exit={{ opacity: 0, y: -30 }}
                   transition={{ delay: index * 0.1 }}
                 >
-                  <MovieCard movie={movie} />
+                  <MovieCard
+                    movie={movie}
+                    onBookmark={analyzeUserPreferences}
+                  />
                 </motion.div>
               ))}
             </AnimatePresence>
