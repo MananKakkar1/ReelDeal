@@ -35,11 +35,15 @@ router.get('/user/watchlist', authenticateToken, async (req, res) => {
     .select('tmdbId title posterPath releaseDate overview voteAverage genres userRatings')
     .limit(50);
 
+    console.log('Raw movies found for watchlist:', movies.map(m => ({ id: m.tmdbId, userRatings: m.userRatings })));
+
     // Only include movies where the user's userRatings entry has watchlist:true and watched:false
     const filteredMovies = movies.filter(movie => {
       const userRating = movie.userRatings.find(ur => ur.user.toString() === req.user._id.toString());
       return userRating && userRating.watchlist && !userRating.watched;
     });
+
+    console.log('Filtered watchlist movies:', filteredMovies.map(m => ({ id: m.tmdbId, userRatings: m.userRatings })));
 
     const transformedMovies = filteredMovies.map(movie => {
       try {
@@ -62,6 +66,8 @@ router.get('/user/watchlist', authenticateToken, async (req, res) => {
         return null;
       }
     }).filter(movie => movie !== null);
+
+    console.log('Transformed watchlist movies sent to frontend:', transformedMovies);
 
     res.json({
       success: true,
@@ -88,11 +94,15 @@ router.get('/user/watched', authenticateToken, async (req, res) => {
     .select('tmdbId title posterPath releaseDate overview voteAverage genres runtime userRatings')
     .limit(50);
 
+    console.log('Raw movies found for watched:', movies.map(m => ({ id: m.tmdbId, userRatings: m.userRatings })));
+
     // Only include movies where the user's userRatings entry has watched:true and watchlist:false
     const filteredMovies = movies.filter(movie => {
       const userRating = movie.userRatings.find(ur => ur.user.toString() === req.user._id.toString());
       return userRating && userRating.watched && !userRating.watchlist;
     });
+
+    console.log('Filtered watched movies:', filteredMovies.map(m => ({ id: m.tmdbId, userRatings: m.userRatings })));
 
     const transformedMovies = filteredMovies.map(movie => {
       try {
@@ -116,6 +126,8 @@ router.get('/user/watched', authenticateToken, async (req, res) => {
         return null;
       }
     }).filter(movie => movie !== null);
+
+    console.log('Transformed watched movies sent to frontend:', transformedMovies);
 
     res.json({
       success: true,
