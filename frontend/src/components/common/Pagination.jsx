@@ -12,7 +12,7 @@ const PaginationContainer = styled.div`
   flex-wrap: wrap;
 `;
 
-const PageButton = styled("button", {
+const PageButton = styled(motion.button, {
   shouldForwardProp: (prop) => prop !== "$active",
 })`
   display: flex;
