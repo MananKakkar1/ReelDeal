@@ -652,20 +652,48 @@ router.get('/:movieId', validateMovieId, optionalAuth, async (req, res) => {
 router.post('/:movieId/rate', authenticateToken, validateMovieRating, async (req, res) => {
   try {
     const { movieId } = req.params;
-    const { rating, review, watched, watchlist, favorite, watchedDate } = req.body;
+    const { rating, review, watched, watchlist, favorite, watchedDate, title, poster_path, release_date, vote_average, genres } = req.body;
 
     console.log('Rate movie request:', { movieId, rating, review, watched, watchlist, favorite });
 
-    // Fetch movie from TMDB and save to DB
+    // Try to fetch movie from TMDB, fallback to request body
     let tmdbMovie;
     try {
       tmdbMovie = await fetchMovieFromTMDB(movieId);
     } catch (error) {
       console.error('Error fetching movie from TMDB:', error);
-      return res.status(404).json({
-        success: false,
-        message: 'Movie not found in TMDB'
-      });
+      // Fallback: use movie info from request body
+      if (title && poster_path && release_date) {
+        tmdbMovie = {
+          id: parseInt(movieId),
+          title,
+          original_title: title,
+          overview: '',
+          poster_path,
+          backdrop_path: '',
+          release_date,
+          runtime: 0,
+          genres: (genres || []).map(g => ({ name: g })),
+          original_language: 'en',
+          vote_average: vote_average || 0,
+          vote_count: 0,
+          popularity: 0,
+          budget: 0,
+          revenue: 0,
+          status: 'Released',
+          tagline: '',
+          production_companies: [],
+          production_countries: [],
+          spoken_languages: [],
+          homepage: '',
+          imdb_id: ''
+        };
+      } else {
+        return res.status(404).json({
+          success: false,
+          message: 'Movie not found in TMDB and insufficient data provided.'
+        });
+      }
     }
 
     let movie;
