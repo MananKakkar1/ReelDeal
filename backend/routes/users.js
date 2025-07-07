@@ -28,8 +28,6 @@ router.get('/health', async (req, res) => {
 router.get('/user/watchlist', authenticateToken, async (req, res) => {
   try {
     console.log('Fetching watchlist for user:', req.user._id);
-    
-    // Simple query without complex sorting
     const movies = await Movie.find({
       'userRatings.user': req.user._id,
       'userRatings.watchlist': true
@@ -37,10 +35,13 @@ router.get('/user/watchlist', authenticateToken, async (req, res) => {
     .select('tmdbId title posterPath releaseDate overview voteAverage genres userRatings')
     .limit(50);
 
-    console.log('Found movies:', movies.length);
+    // Only include movies where the user's userRatings entry has watchlist:true and watched:false
+    const filteredMovies = movies.filter(movie => {
+      const userRating = movie.userRatings.find(ur => ur.user.toString() === req.user._id.toString());
+      return userRating && userRating.watchlist && !userRating.watched;
+    });
 
-    // Transform the data to include user-specific information
-    const transformedMovies = movies.map(movie => {
+    const transformedMovies = filteredMovies.map(movie => {
       try {
         const userRating = movie.userRatings.find(ur => ur.user.toString() === req.user._id.toString());
         return {
@@ -62,15 +63,12 @@ router.get('/user/watchlist', authenticateToken, async (req, res) => {
       }
     }).filter(movie => movie !== null);
 
-    console.log('Transformed movies:', transformedMovies.length);
-
     res.json({
       success: true,
       data: transformedMovies
     });
   } catch (error) {
     console.error('Get watchlist error:', error);
-    console.error('Error stack:', error.stack);
     res.status(500).json({
       success: false,
       message: 'Failed to fetch watchlist',
@@ -83,7 +81,6 @@ router.get('/user/watchlist', authenticateToken, async (req, res) => {
 router.get('/user/watched', authenticateToken, async (req, res) => {
   try {
     console.log('Fetching watched movies for user:', req.user._id);
-
     const movies = await Movie.find({
       'userRatings.user': req.user._id,
       'userRatings.watched': true
@@ -91,10 +88,13 @@ router.get('/user/watched', authenticateToken, async (req, res) => {
     .select('tmdbId title posterPath releaseDate overview voteAverage genres runtime userRatings')
     .limit(50);
 
-    console.log('Found watched movies:', movies.length);
+    // Only include movies where the user's userRatings entry has watched:true and watchlist:false
+    const filteredMovies = movies.filter(movie => {
+      const userRating = movie.userRatings.find(ur => ur.user.toString() === req.user._id.toString());
+      return userRating && userRating.watched && !userRating.watchlist;
+    });
 
-    // Transform the data to include user-specific information
-    const transformedMovies = movies.map(movie => {
+    const transformedMovies = filteredMovies.map(movie => {
       try {
         const userRating = movie.userRatings.find(ur => ur.user.toString() === req.user._id.toString());
         return {
@@ -117,15 +117,12 @@ router.get('/user/watched', authenticateToken, async (req, res) => {
       }
     }).filter(movie => movie !== null);
 
-    console.log('Transformed watched movies:', transformedMovies.length);
-
     res.json({
       success: true,
       data: transformedMovies
     });
   } catch (error) {
     console.error('Get watched movies error:', error);
-    console.error('Error stack:', error.stack);
     res.status(500).json({
       success: false,
       message: 'Failed to fetch watched movies',
