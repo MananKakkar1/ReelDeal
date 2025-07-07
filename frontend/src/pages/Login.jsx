@@ -4,6 +4,7 @@ import styled from "@emotion/styled";
 import { motion } from "framer-motion";
 import { Mail, Lock, Eye, EyeOff, LogIn } from "lucide-react";
 import { authAPI } from "../services/api";
+import useAuthStore from "../stores/authStore";
 
 const LoginContainer = styled.div`
   min-height: 100vh;
@@ -231,36 +232,32 @@ function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const { login, isAuthenticated } = useAuthStore();
+
+  React.useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/", { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
     });
-    setError(""); // Clear error when user types
+    setError("");
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
-
-    try {
-      const response = await authAPI.login(formData);
-      const { token, user } = response.data.data;
-
-      // Store token and user data
-      localStorage.setItem("token", token);
-      localStorage.setItem("user", JSON.stringify(user));
-
-      // Redirect to home page
+    const result = await login(formData);
+    setLoading(false);
+    if (result.success) {
       navigate("/");
-    } catch (error) {
-      setError(
-        error.response?.data?.message || "Login failed. Please try again."
-      );
-    } finally {
-      setLoading(false);
+    } else {
+      setError(result.error || "Login failed. Please try again.");
     }
   };
 
