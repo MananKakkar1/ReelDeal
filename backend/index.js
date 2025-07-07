@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const path = require('path');
 require('dotenv').config();
 
 // Import routes
@@ -58,6 +59,15 @@ app.use('/api/auth', authRoutes);
 app.use('/api/movies', movieRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/reviews', reviewRoutes);
+
+// Serve frontend static files (React build)
+const frontendBuildPath = path.join(__dirname, '../frontend/dist');
+app.use(express.static(frontendBuildPath));
+
+// Catch-all: serve index.html for non-API routes (for React Router)
+app.get(/^\/(?!api).*/, (req, res) => {
+  res.sendFile(path.join(frontendBuildPath, 'index.html'));
+});
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
