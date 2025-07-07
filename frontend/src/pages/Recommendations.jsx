@@ -530,28 +530,28 @@ function Recommendations() {
 
       <Controls>
         <FilterButton
-          active={filter === "all"}
+          className={filter === "all" ? "active" : ""}
           onClick={() => setFilter("all")}
         >
           <Filter size={16} />
           All
         </FilterButton>
         <FilterButton
-          active={filter === "high-rated"}
+          className={filter === "high-rated" ? "active" : ""}
           onClick={() => setFilter("high-rated")}
         >
           <Star size={16} />
           High Rated
         </FilterButton>
         <FilterButton
-          active={filter === "recent"}
+          className={filter === "recent" ? "active" : ""}
           onClick={() => setFilter("recent")}
         >
           <TrendingUp size={16} />
           Recent
         </FilterButton>
         <FilterButton
-          active={filter === "classic"}
+          className={filter === "classic" ? "active" : ""}
           onClick={() => setFilter("classic")}
         >
           <Clock size={16} />

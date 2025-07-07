@@ -56,19 +56,19 @@ function App() {
 
   useEffect(() => {
     initialize();
-    
+
     // Test backend connectivity
     const testBackend = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/health');
+        const response = await fetch("/api/health");
         const data = await response.json();
-        console.log('Backend health check:', data);
+        console.log("Backend health check:", data);
       } catch (error) {
-        console.error('Backend not accessible:', error);
-        console.log('Please make sure the backend server is running on http://localhost:5000');
+        console.error("Backend not accessible:", error);
+        console.log("Please make sure the backend server is running");
       }
     };
-    
+
     testBackend();
   }, [initialize]);
 

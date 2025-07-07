@@ -21,25 +21,25 @@ const PageButton = styled(motion.button)`
   padding: 0 0.75rem;
   border: 1px solid rgba(148, 163, 184, 0.2);
   background: ${(props) =>
-    props.active
+    props.$active
       ? "linear-gradient(135deg, #06b6d4 0%, #2563eb 100%)"
       : "rgba(15, 23, 42, 0.5)"};
-  color: ${(props) => (props.active ? "white" : "#94a3b8")};
+  color: ${(props) => (props.$active ? "white" : "#94a3b8")};
   border-radius: 0.5rem;
   font-size: 0.875rem;
-  font-weight: ${(props) => (props.active ? "600" : "500")};
+  font-weight: ${(props) => (props.$active ? "600" : "500")};
   cursor: pointer;
   transition: all 0.3s ease;
   backdrop-filter: blur(10px);
 
   &:hover {
     background: ${(props) =>
-      props.active
+      props.$active
         ? "linear-gradient(135deg, #06b6d4 0%, #2563eb 100%)"
         : "rgba(6, 182, 212, 0.1)"};
     border-color: ${(props) =>
-      props.active ? "transparent" : "rgba(6, 182, 212, 0.3)"};
-    color: ${(props) => (props.active ? "white" : "#06b6d4")};
+      props.$active ? "transparent" : "rgba(6, 182, 212, 0.3)"};
+    color: ${(props) => (props.$active ? "white" : "#06b6d4")};
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(6, 182, 212, 0.15);
   }
@@ -167,7 +167,7 @@ const Pagination = ({
         return (
           <PageButton
             key={page}
-            active={currentPage === page}
+            $active={currentPage === page}
             onClick={() => onPageChange(page)}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}

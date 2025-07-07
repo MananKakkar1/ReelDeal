@@ -369,12 +369,12 @@ const Navbar = () => {
           <NavLeft>
             <Logo />
             <NavLinks>
-              <NavLink to="/" active={isActive("/") ? "true" : "false"}>
+              <NavLink to="/" className={isActive("/") ? "active" : ""}>
                 Home
               </NavLink>
               <NavLink
                 to="/search"
-                active={isActive("/search") ? "true" : "false"}
+                className={isActive("/search") ? "active" : ""}
               >
                 Search
               </NavLink>
@@ -382,19 +382,19 @@ const Navbar = () => {
                 <>
                   <NavLink
                     to="/watchlist"
-                    active={isActive("/watchlist") ? "true" : "false"}
+                    className={isActive("/watchlist") ? "active" : ""}
                   >
                     Watchlist
                   </NavLink>
                   <NavLink
                     to="/watched"
-                    active={isActive("/watched") ? "true" : "false"}
+                    className={isActive("/watched") ? "active" : ""}
                   >
                     Watched
                   </NavLink>
                   <NavLink
                     to="/recommendations"
-                    active={isActive("/recommendations") ? "true" : "false"}
+                    className={isActive("/recommendations") ? "active" : ""}
                   >
                     Recommendations
                   </NavLink>
@@ -482,12 +482,12 @@ const Navbar = () => {
               </MobileSearchContainer>
 
               <MobileNavLinks>
-                <MobileNavLink to="/" active={isActive("/") ? "true" : "false"}>
+                <MobileNavLink to="/" className={isActive("/") ? "active" : ""}>
                   Home
                 </MobileNavLink>
                 <MobileNavLink
                   to="/search"
-                  active={isActive("/search") ? "true" : "false"}
+                  className={isActive("/search") ? "active" : ""}
                 >
                   Search
                 </MobileNavLink>
@@ -495,25 +495,25 @@ const Navbar = () => {
                   <>
                     <MobileNavLink
                       to="/watchlist"
-                      active={isActive("/watchlist") ? "true" : "false"}
+                      className={isActive("/watchlist") ? "active" : ""}
                     >
                       Watchlist
                     </MobileNavLink>
                     <MobileNavLink
                       to="/watched"
-                      active={isActive("/watched") ? "true" : "false"}
+                      className={isActive("/watched") ? "active" : ""}
                     >
                       Watched
                     </MobileNavLink>
                     <MobileNavLink
                       to="/recommendations"
-                      active={isActive("/recommendations") ? "true" : "false"}
+                      className={isActive("/recommendations") ? "active" : ""}
                     >
                       Recommendations
                     </MobileNavLink>
                     <MobileNavLink
                       to="/profile"
-                      active={isActive("/profile") ? "true" : "false"}
+                      className={isActive("/profile") ? "active" : ""}
                     >
                       Profile
                     </MobileNavLink>

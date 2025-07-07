@@ -143,12 +143,12 @@ const FilterButton = styled.button`
   gap: 0.5rem;
   padding: 0.75rem 1.5rem;
   background: ${(props) =>
-    props.active
+    props.className === "active"
       ? "linear-gradient(135deg, #06b6d4 0%, #2563eb 100%)"
       : "rgba(30, 41, 59, 0.5)"};
   border: 1px solid rgba(148, 163, 184, 0.2);
   border-radius: 999px;
-  color: ${(props) => (props.active ? "white" : "#94a3b8")};
+  color: ${(props) => (props.className === "active" ? "white" : "#94a3b8")};
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -854,35 +854,35 @@ function WatchedMovies() {
         />
 
         <FilterButton
-          active={filter === "all"}
+          className={filter === "all" ? "active" : ""}
           onClick={() => setFilter("all")}
         >
           <Filter size={16} />
           All
         </FilterButton>
         <FilterButton
-          active={filter === "high-rated"}
+          className={filter === "high-rated" ? "active" : ""}
           onClick={() => setFilter("high-rated")}
         >
           <Star size={16} />
           High Rated
         </FilterButton>
         <FilterButton
-          active={filter === "recent"}
+          className={filter === "recent" ? "active" : ""}
           onClick={() => setFilter("recent")}
         >
           <TrendingUp size={16} />
           Recent
         </FilterButton>
         <FilterButton
-          active={filter === "classic"}
+          className={filter === "classic" ? "active" : ""}
           onClick={() => setFilter("classic")}
         >
           <Calendar size={16} />
           Classics
         </FilterButton>
         <FilterButton
-          active={filter === "favorites"}
+          className={filter === "favorites" ? "active" : ""}
           onClick={() => setFilter("favorites")}
         >
           <Heart size={16} />
@@ -936,7 +936,9 @@ function WatchedMovies() {
                           <Star size={14} fill="#fbbf24" />
                           {movie.vote_average?.toFixed(1) || "N/A"}
                         </Rating>
-                        <Year>{new Date(movie.release_date).getFullYear()}</Year>
+                        <Year>
+                          {new Date(movie.release_date).getFullYear()}
+                        </Year>
                         {movie.userRating && (
                           <UserRating>
                             <Star size={14} fill="#10b981" />
@@ -952,7 +954,9 @@ function WatchedMovies() {
                         </WatchedDate>
                       )}
 
-                      {movie.review && <ReviewText>"{movie.review}"</ReviewText>}
+                      {movie.review && (
+                        <ReviewText>"{movie.review}"</ReviewText>
+                      )}
 
                       <GenreTags>
                         {movie.genres?.slice(0, 2).map((genre) => (

@@ -222,7 +222,6 @@ function MovieCard({ movie }) {
 
           {/* Bookmark Button */}
           <BookmarkButton
-            isBookmarked={isBookmarked}
             onClick={handleBookmarkClick}
             disabled={isLoading}
             whileHover={{ scale: 1.1 }}

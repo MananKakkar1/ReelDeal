@@ -29,7 +29,11 @@ app.use(
         ],
         scriptSrc: ["'self'", "'unsafe-inline'"],
         styleSrc: ["'self'", "'unsafe-inline'"],
-        imgSrc: ["'self'", "data:"],
+        imgSrc: [
+          "'self'",
+          "data:",
+          "https://image.tmdb.org"
+        ],
         fontSrc: ["'self'", "data:"],
         objectSrc: ["'none'"],
         frameSrc: ["'none'"],
