@@ -365,7 +365,7 @@ function Watchlist() {
     try {
       setLoading(true);
       const response = await usersAPI.getCurrentUserWatchlist({ page });
-      const watchlistData = response.data.data?.watchlist || [];
+      const watchlistData = response.data.data || [];
       const paginationData = response.data.data?.pagination || {};
 
       setWatchlist(watchlistData);

@@ -593,7 +593,7 @@ function WatchedMovies() {
     try {
       setLoading(true);
       const response = await usersAPI.getCurrentUserWatched({ page });
-      const watchedData = response.data.data?.watched || [];
+      const watchedData = response.data.data || [];
       const paginationData = response.data.data?.pagination || {};
 
       setWatchedMovies(watchedData);
