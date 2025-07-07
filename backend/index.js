@@ -36,7 +36,11 @@ app.use(
         ],
         fontSrc: ["'self'", "data:"],
         objectSrc: ["'none'"],
-        frameSrc: ["'none'"],
+        frameSrc: [
+          "'self'",
+          "https://www.youtube.com",
+          "https://www.youtube-nocookie.com"
+        ],
       },
     },
   })
