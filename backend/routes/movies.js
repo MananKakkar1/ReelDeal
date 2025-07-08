@@ -728,6 +728,19 @@ router.post('/:movieId/rate', authenticateToken, validateMovieRating, async (req
       ratingData.watched = false;
     }
 
+    // If removing (watched: false, watchlist: false, favorite: false) and no user rating exists, return success
+    const isRemoval = (
+      (watched === false || watchlist === false || favorite === false) &&
+      !rating && !review && !watchedDate
+    );
+    if (existingRatingIndex === -1 && isRemoval) {
+      return res.json({
+        success: true,
+        message: 'Movie already not in list',
+        data: {}
+      });
+    }
+
     if (existingRatingIndex > -1) {
       // Update existing rating
       movie.userRatings[existingRatingIndex] = {
