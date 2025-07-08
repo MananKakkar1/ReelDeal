@@ -227,12 +227,13 @@ router.get('/:userId', validateUserId, optionalAuth, async (req, res) => {
 // Update user profile
 router.put('/profile', authenticateToken, async (req, res) => {
   try {
-    const { username, bio, preferences } = req.body;
+    const { username, bio, preferences, email, avatar, password } = req.body;
 
     const updateData = {};
     if (username) updateData.username = username;
     if (bio !== undefined) updateData.bio = bio;
     if (preferences) updateData.preferences = preferences;
+    if (avatar !== undefined) updateData.avatar = avatar;
 
     // Check if username is already taken
     if (username) {
@@ -246,6 +247,28 @@ router.put('/profile', authenticateToken, async (req, res) => {
           message: 'Username already taken'
         });
       }
+    }
+
+    // Check if email is already taken
+    if (email) {
+      const existingEmail = await User.findOne({ 
+        email, 
+        _id: { $ne: req.user._id } 
+      });
+      if (existingEmail) {
+        return res.status(400).json({
+          success: false,
+          message: 'Email already registered'
+        });
+      }
+      updateData.email = email;
+    }
+
+    // If password is provided, hash it
+    if (password && password.length >= 6) {
+      const bcrypt = require('bcryptjs');
+      const salt = await bcrypt.genSalt(10);
+      updateData.password = await bcrypt.hash(password, salt);
     }
 
     const updatedUser = await User.findByIdAndUpdate(

@@ -427,7 +427,7 @@ const Navbar = () => {
                       exit={{ opacity: 0, y: -10 }}
                       transition={{ duration: 0.2 }}
                     >
-                      <DropdownItem to="/profile">
+                      <DropdownItem to="/profile?tab=profile">
                         <User size={16} />
                         Profile
                       </DropdownItem>
@@ -439,7 +439,7 @@ const Navbar = () => {
                         <Heart size={16} />
                         Recommendations
                       </DropdownItem>
-                      <DropdownItem to="/settings">
+                      <DropdownItem to="/profile?tab=settings">
                         <Settings size={16} />
                         Settings
                       </DropdownItem>
@@ -512,10 +512,16 @@ const Navbar = () => {
                       Recommendations
                     </MobileNavLink>
                     <MobileNavLink
-                      to="/profile"
+                      to="/profile?tab=profile"
                       className={isActive("/profile") ? "active" : ""}
                     >
                       Profile
+                    </MobileNavLink>
+                    <MobileNavLink
+                      to="/profile?tab=settings"
+                      className={isActive("/profile") ? "active" : ""}
+                    >
+                      Settings
                     </MobileNavLink>
                   </>
                 )}

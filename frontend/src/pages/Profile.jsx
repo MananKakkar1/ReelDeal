@@ -6,6 +6,7 @@ import Spinner from "../components/common/Spinner";
 import Button from "../components/common/Button";
 import MovieCard from "../components/MovieCard";
 import { usersAPI } from "../services/api";
+import api from "../services/api";
 import { motion } from "framer-motion";
 import {
   User,
@@ -18,6 +19,7 @@ import {
 } from "lucide-react";
 import MovieList from "../components/MovieList";
 import SettingsForm from "../components/SettingsForm";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const ProfileContainer = styled.div`
   width: 100%;
@@ -259,41 +261,72 @@ function ProfileAbout({ user }) {
           About
         </SectionTitleStyled>
       </SectionHeader>
-      <UserInfo>
-        <InfoItem>
-          <InfoIcon>
-            <Calendar size={16} />
-          </InfoIcon>
-          <span>Joined {new Date(user.joinDate).toLocaleDateString()}</span>
-        </InfoItem>
-        <InfoItem>
-          <InfoIcon>
-            <MapPin size={16} />
-          </InfoIcon>
-          <span>{user.location}</span>
-        </InfoItem>
-        <InfoItem>
-          <InfoIcon>
-            <Mail size={16} />
-          </InfoIcon>
-          <span>{user.email}</span>
-        </InfoItem>
-      </UserInfo>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "2rem",
+          marginBottom: "1.5rem",
+        }}
+      >
+        <Avatar>
+          {user.avatar ? (
+            <img
+              src={user.avatar}
+              alt={user.username}
+              style={{
+                width: "100%",
+                height: "100%",
+                borderRadius: "50%",
+                objectFit: "cover",
+              }}
+            />
+          ) : (
+            <User size={48} />
+          )}
+        </Avatar>
+        <div>
+          <UserName>{user.username}</UserName>
+          <UserEmail>{user.email}</UserEmail>
+        </div>
+      </div>
+      {user.bio && (
+        <div style={{ color: "#94a3b8", marginBottom: "1rem" }}>{user.bio}</div>
+      )}
+      <UserStats>
+        <Stat>
+          <StatNumber>{user.stats?.moviesWatched || 0}</StatNumber>
+          <StatLabel>Watched</StatLabel>
+        </Stat>
+        <Stat>
+          <StatNumber>{user.stats?.reviewsWritten || 0}</StatNumber>
+          <StatLabel>Reviews</StatLabel>
+        </Stat>
+        <Stat>
+          <StatNumber>{user.followers || 0}</StatNumber>
+          <StatLabel>Followers</StatLabel>
+        </Stat>
+      </UserStats>
     </ContentSection>
   );
 }
 
 function Profile() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const queryTab = new URLSearchParams(location.search).get("tab");
+  const validTabs = ["profile", "watchlist", "recommendations", "settings"];
+  const initialTab = validTabs.includes(queryTab) ? queryTab : "profile";
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [user, setUser] = useState(null);
   const [recentMovies, setRecentMovies] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("profile");
   const [watchlist, setWatchlist] = useState([]);
   const [recommendations, setRecommendations] = useState([]);
   const [settingsSaved, setSettingsSaved] = useState(false);
 
   useEffect(() => {
-    loadUserData();
+    fetchCurrentUser();
   }, []);
 
   useEffect(() => {
@@ -301,55 +334,12 @@ function Profile() {
     if (activeTab === "recommendations") fetchRecommendations();
   }, [activeTab]);
 
-  const loadUserData = async () => {
+  const fetchCurrentUser = async () => {
     try {
-      setLoading(true);
-
-      // Mock user data for now
-      const mockUser = {
-        id: "1",
-        username: "MovieLover",
-        email: "movielover@example.com",
-        avatar: null,
-        joinDate: "2024-01-15",
-        location: "New York, NY",
-        stats: {
-          moviesWatched: 127,
-          reviewsWritten: 23,
-          followers: 45,
-        },
-      };
-
-      setUser(mockUser);
-
-      // Mock recent movies
-      const mockMovies = [
-        {
-          id: 1,
-          title: "Inception",
-          poster_path: "/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg",
-          vote_average: 8.4,
-          release_date: "2010-07-16",
-        },
-        {
-          id: 2,
-          title: "The Dark Knight",
-          poster_path: "/qJ2tW6WMUDux911r6m7haRef0WH.jpg",
-          vote_average: 9.0,
-          release_date: "2008-07-18",
-        },
-        {
-          id: 3,
-          title: "Interstellar",
-          poster_path: "/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg",
-          vote_average: 8.6,
-          release_date: "2014-11-07",
-        },
-      ];
-
-      setRecentMovies(mockMovies);
+      const response = await api.get("/auth/me");
+      setUser(response.data.data.user);
     } catch (error) {
-      console.error("Error loading user data:", error);
+      setUser(null);
     } finally {
       setLoading(false);
     }
@@ -389,9 +379,20 @@ function Profile() {
   };
 
   const handleSaveSettings = async (formData) => {
-    // TODO: Save settings to backend
-    setSettingsSaved(true);
-    setTimeout(() => setSettingsSaved(false), 2000);
+    try {
+      await api.put("/users/profile", formData);
+      setSettingsSaved(true);
+      fetchCurrentUser();
+      setTimeout(() => setSettingsSaved(false), 2000);
+    } catch (error) {
+      // handle error
+    }
+  };
+
+  // When tab changes, update the URL
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    navigate(`/profile?tab=${tab}`);
   };
 
   if (loading) return <Spinner />;
@@ -472,30 +473,30 @@ function Profile() {
             <TabsBar>
               <TabButton
                 active={activeTab === "profile"}
-                onClick={() => setActiveTab("profile")}
+                onClick={() => handleTabChange("profile")}
               >
                 Profile
               </TabButton>
               <TabButton
                 active={activeTab === "watchlist"}
-                onClick={() => setActiveTab("watchlist")}
+                onClick={() => handleTabChange("watchlist")}
               >
                 Watchlist
               </TabButton>
               <TabButton
                 active={activeTab === "recommendations"}
-                onClick={() => setActiveTab("recommendations")}
+                onClick={() => handleTabChange("recommendations")}
               >
                 Recommendations
               </TabButton>
               <TabButton
                 active={activeTab === "settings"}
-                onClick={() => setActiveTab("settings")}
+                onClick={() => handleTabChange("settings")}
               >
                 Settings
               </TabButton>
             </TabsBar>
-            {activeTab === "profile" && (
+            {activeTab === "profile" && user && (
               <>
                 <ProfileAbout user={user} />
                 <ContentSection>
@@ -557,7 +558,7 @@ function Profile() {
                 />
               </ContentSection>
             )}
-            {activeTab === "settings" && (
+            {activeTab === "settings" && user && (
               <ContentSection>
                 <SectionHeader>
                   <SectionTitleStyled>

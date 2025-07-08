@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import styled from "@emotion/styled";
 import Button from "./common/Button";
+import api from "../services/api";
+import { useEffect } from "react";
 
 const Form = styled.form`
   display: flex;
@@ -46,10 +48,38 @@ function SettingsForm({ user, onSave }) {
   const [formData, setFormData] = useState({
     username: user?.username || "",
     email: user?.email || "",
-    location: user?.location || "",
+    avatar: user?.avatar || "",
+    bio: user?.bio || "",
     password: "",
   });
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    // Always fetch the latest user data when the form mounts or user changes
+    const fetchUser = async () => {
+      try {
+        const response = await api.get("/auth/me");
+        const u = response.data.data.user;
+        setFormData({
+          username: u.username || "",
+          email: u.email || "",
+          avatar: u.avatar || "",
+          bio: u.bio || "",
+          password: "",
+        });
+      } catch (error) {
+        // fallback to passed user
+        setFormData({
+          username: user?.username || "",
+          email: user?.email || "",
+          avatar: user?.avatar || "",
+          bio: user?.bio || "",
+          password: "",
+        });
+      }
+    };
+    fetchUser();
+  }, [user]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -59,6 +89,16 @@ function SettingsForm({ user, onSave }) {
     e.preventDefault();
     setSaving(true);
     await onSave(formData);
+    // Refresh user data after save
+    const response = await api.get("/auth/me");
+    const u = response.data.data.user;
+    setFormData({
+      username: u.username || "",
+      email: u.email || "",
+      avatar: u.avatar || "",
+      bio: u.bio || "",
+      password: "",
+    });
     setSaving(false);
   };
 
@@ -86,12 +126,23 @@ function SettingsForm({ user, onSave }) {
         />
       </FormGroup>
       <FormGroup>
-        <Label htmlFor="location">Location</Label>
+        <Label htmlFor="avatar">Avatar URL</Label>
         <Input
-          id="location"
-          name="location"
-          value={formData.location}
+          id="avatar"
+          name="avatar"
+          value={formData.avatar}
           onChange={handleChange}
+          placeholder="Paste image URL or leave blank"
+        />
+      </FormGroup>
+      <FormGroup>
+        <Label htmlFor="bio">Bio</Label>
+        <Input
+          id="bio"
+          name="bio"
+          value={formData.bio}
+          onChange={handleChange}
+          placeholder="Tell us about yourself"
         />
       </FormGroup>
       <FormGroup>
