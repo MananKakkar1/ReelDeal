@@ -335,10 +335,8 @@ function Recommendations() {
       // Get recommendations from backend API with pagination
       const response = await usersAPI.getRecommendations(page);
       console.log("[Recommendations] API response:", response);
-      const apiRecommendations = response.data.data?.recommendations || [];
-      const paginationData = response.data.data?.pagination || {};
-
-      console.log("API Recommendations:", apiRecommendations);
+      const apiRecommendations = response.data.data || [];
+      const paginationData = response.data.pagination || {};
 
       if (apiRecommendations.length > 0) {
         // Add userInteraction field to make it compatible with MovieCard
@@ -361,14 +359,10 @@ function Recommendations() {
           `Generated ${apiRecommendations.length} personalized recommendations!`
         );
       } else {
-        // Fallback to mock recommendations if API doesn't return data
-        const mockRecommendations = generateMockRecommendations();
-        setRecommendations(mockRecommendations);
+        setRecommendations([]);
         setTotalPages(1);
-        setTotalResults(mockRecommendations.length);
-        toast.success(
-          `Generated ${mockRecommendations.length} personalized recommendations!`
-        );
+        setTotalResults(0);
+        toast.info("No personalized recommendations found.");
       }
     } catch (error) {
       const backendData = error?.response?.data;
@@ -385,13 +379,10 @@ function Recommendations() {
         });
       }
       // Fallback to mock recommendations on error
-      const mockRecommendations = generateMockRecommendations();
-      setRecommendations(mockRecommendations);
+      setRecommendations([]);
       setTotalPages(1);
-      setTotalResults(mockRecommendations.length);
-      toast.success(
-        `Generated ${mockRecommendations.length} personalized recommendations!`
-      );
+      setTotalResults(0);
+      toast.info("No personalized recommendations found.");
     } finally {
       setLoading(false);
     }
@@ -402,92 +393,6 @@ function Recommendations() {
     setCurrentPage(page);
     generateRecommendations(page);
     window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  const generateMockRecommendations = () => {
-    const mockMovies = [
-      {
-        id: 1,
-        title: "Inception",
-        poster_path: "/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg",
-        vote_average: 8.4,
-        release_date: "2010-07-16",
-        genres: ["Action", "Sci-Fi", "Thriller"],
-        matchScore: 95,
-        matchReason: "Similar to your high-rated sci-fi films",
-      },
-      {
-        id: 2,
-        title: "The Dark Knight",
-        poster_path: "/qJ2tW6WMUDux911r6m7haRef0WH.jpg",
-        vote_average: 9.0,
-        release_date: "2008-07-18",
-        genres: ["Action", "Crime", "Drama"],
-        matchScore: 92,
-        matchReason: "Matches your preference for action dramas",
-      },
-      {
-        id: 3,
-        title: "Interstellar",
-        poster_path: "/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg",
-        vote_average: 8.6,
-        release_date: "2014-11-07",
-        genres: ["Adventure", "Drama", "Sci-Fi"],
-        matchScore: 89,
-        matchReason: "Based on your love for sci-fi epics",
-      },
-      {
-        id: 4,
-        title: "Pulp Fiction",
-        poster_path: "/d5iIlFn5s0ImszYzBPb8JPIfbXD.jpg",
-        vote_average: 8.9,
-        release_date: "1994-10-14",
-        genres: ["Crime", "Drama"],
-        matchReason: "Similar to your crime drama preferences",
-      },
-      {
-        id: 5,
-        title: "The Matrix",
-        poster_path: "/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg",
-        vote_average: 8.7,
-        release_date: "1999-03-31",
-        genres: ["Action", "Sci-Fi"],
-        matchScore: 87,
-        matchReason: "Matches your sci-fi action taste",
-      },
-      {
-        id: 6,
-        title: "Fight Club",
-        poster_path: "/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg",
-        vote_average: 8.8,
-        release_date: "1999-10-15",
-        genres: ["Drama"],
-        matchScore: 85,
-        matchReason: "Based on your drama preferences",
-      },
-    ];
-
-    // Filter based on selected filter
-    let filtered = mockMovies;
-    switch (filter) {
-      case "high-rated":
-        filtered = mockMovies.filter((movie) => movie.vote_average >= 8.5);
-        break;
-      case "recent":
-        filtered = mockMovies.filter(
-          (movie) => new Date(movie.release_date).getFullYear() >= 2010
-        );
-        break;
-      case "classic":
-        filtered = mockMovies.filter(
-          (movie) => new Date(movie.release_date).getFullYear() < 2000
-        );
-        break;
-      default:
-        break;
-    }
-
-    return filtered.slice(0, 6);
   };
 
   const filteredRecommendations = recommendations.filter((movie) => {
