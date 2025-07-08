@@ -321,6 +321,10 @@ function Recommendations() {
 
   const generateRecommendations = async (page = 1) => {
     if (typeof page !== "number" || isNaN(page)) page = 1;
+    console.log(
+      "[Recommendations] Calling getRecommendations with page:",
+      page
+    );
     if (!userPreferences || userPreferences.watchedMovies.length === 0) {
       toast.error("Please add some movies to your watched list first!");
       return;
@@ -330,6 +334,7 @@ function Recommendations() {
     try {
       // Get recommendations from backend API with pagination
       const response = await usersAPI.getRecommendations(page);
+      console.log("[Recommendations] API response:", response);
       const apiRecommendations = response.data.data?.recommendations || [];
       const paginationData = response.data.data?.pagination || {};
 
@@ -366,7 +371,11 @@ function Recommendations() {
         );
       }
     } catch (error) {
-      console.error("Error generating recommendations:", error);
+      console.error(
+        "[Recommendations] Error generating recommendations:",
+        error,
+        error?.response?.data
+      );
       // Fallback to mock recommendations on error
       const mockRecommendations = generateMockRecommendations();
       setRecommendations(mockRecommendations);
