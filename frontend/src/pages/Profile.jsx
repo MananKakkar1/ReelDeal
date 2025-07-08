@@ -16,6 +16,8 @@ import {
   MapPin,
   Mail,
 } from "lucide-react";
+import MovieList from "../components/MovieList";
+import SettingsForm from "../components/SettingsForm";
 
 const ProfileContainer = styled.div`
   width: 100%;
@@ -224,14 +226,80 @@ const InfoIcon = styled.div`
   color: #06b6d4;
 `;
 
+const TabsBar = styled.div`
+  display: flex;
+  gap: 2rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+  margin-bottom: 2rem;
+`;
+
+const TabButton = styled.button`
+  background: none;
+  border: none;
+  color: ${({ active }) => (active ? "#06b6d4" : "#94a3b8")};
+  font-size: 1.1rem;
+  font-weight: 600;
+  padding: 0.75rem 0;
+  border-bottom: 2.5px solid
+    ${({ active }) => (active ? "#06b6d4" : "transparent")};
+  cursor: pointer;
+  transition: color 0.2s, border-bottom 0.2s;
+
+  &:hover {
+    color: #06b6d4;
+  }
+`;
+
+function ProfileAbout({ user }) {
+  return (
+    <ContentSection>
+      <SectionHeader>
+        <SectionTitleStyled>
+          <User size={20} />
+          About
+        </SectionTitleStyled>
+      </SectionHeader>
+      <UserInfo>
+        <InfoItem>
+          <InfoIcon>
+            <Calendar size={16} />
+          </InfoIcon>
+          <span>Joined {new Date(user.joinDate).toLocaleDateString()}</span>
+        </InfoItem>
+        <InfoItem>
+          <InfoIcon>
+            <MapPin size={16} />
+          </InfoIcon>
+          <span>{user.location}</span>
+        </InfoItem>
+        <InfoItem>
+          <InfoIcon>
+            <Mail size={16} />
+          </InfoIcon>
+          <span>{user.email}</span>
+        </InfoItem>
+      </UserInfo>
+    </ContentSection>
+  );
+}
+
 function Profile() {
   const [user, setUser] = useState(null);
   const [recentMovies, setRecentMovies] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("profile");
+  const [watchlist, setWatchlist] = useState([]);
+  const [recommendations, setRecommendations] = useState([]);
+  const [settingsSaved, setSettingsSaved] = useState(false);
 
   useEffect(() => {
     loadUserData();
   }, []);
+
+  useEffect(() => {
+    if (activeTab === "watchlist") fetchWatchlist();
+    if (activeTab === "recommendations") fetchRecommendations();
+  }, [activeTab]);
 
   const loadUserData = async () => {
     try {
@@ -287,6 +355,24 @@ function Profile() {
     }
   };
 
+  const fetchWatchlist = async () => {
+    try {
+      const response = await usersAPI.getCurrentUserWatchlist();
+      setWatchlist(response.data.data || []);
+    } catch (error) {
+      setWatchlist([]);
+    }
+  };
+
+  const fetchRecommendations = async () => {
+    try {
+      const response = await usersAPI.getRecommendations();
+      setRecommendations(response.data.data || []);
+    } catch (error) {
+      setRecommendations([]);
+    }
+  };
+
   const handleEditProfile = () => {
     // TODO: Implement edit profile functionality
     console.log("Edit profile clicked");
@@ -300,6 +386,12 @@ function Profile() {
   const handleLogout = () => {
     // TODO: Implement logout functionality
     console.log("Logout clicked");
+  };
+
+  const handleSaveSettings = async (formData) => {
+    // TODO: Save settings to backend
+    setSettingsSaved(true);
+    setTimeout(() => setSettingsSaved(false), 2000);
   };
 
   if (loading) return <Spinner />;
@@ -377,68 +469,110 @@ function Profile() {
           </ProfileSidebar>
 
           <ProfileContent>
-            <ContentSection>
-              <SectionHeader>
-                <SectionTitleStyled>
-                  <User size={20} />
-                  About
-                </SectionTitleStyled>
-              </SectionHeader>
-
-              <UserInfo>
-                <InfoItem>
-                  <InfoIcon>
-                    <Calendar size={16} />
-                  </InfoIcon>
-                  <span>
-                    Joined {new Date(user.joinDate).toLocaleDateString()}
-                  </span>
-                </InfoItem>
-                <InfoItem>
-                  <InfoIcon>
-                    <MapPin size={16} />
-                  </InfoIcon>
-                  <span>{user.location}</span>
-                </InfoItem>
-                <InfoItem>
-                  <InfoIcon>
-                    <Mail size={16} />
-                  </InfoIcon>
-                  <span>{user.email}</span>
-                </InfoItem>
-              </UserInfo>
-            </ContentSection>
-
-            <ContentSection>
-              <SectionHeader>
-                <SectionTitleStyled>🎬 Recent Activity</SectionTitleStyled>
-              </SectionHeader>
-
-              {recentMovies.length > 0 ? (
-                <MoviesGrid
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  {recentMovies.map((movie, index) => (
-                    <motion.div
-                      key={movie.id}
-                      initial={{ opacity: 0, y: 30 }}
+            <TabsBar>
+              <TabButton
+                active={activeTab === "profile"}
+                onClick={() => setActiveTab("profile")}
+              >
+                Profile
+              </TabButton>
+              <TabButton
+                active={activeTab === "watchlist"}
+                onClick={() => setActiveTab("watchlist")}
+              >
+                Watchlist
+              </TabButton>
+              <TabButton
+                active={activeTab === "recommendations"}
+                onClick={() => setActiveTab("recommendations")}
+              >
+                Recommendations
+              </TabButton>
+              <TabButton
+                active={activeTab === "settings"}
+                onClick={() => setActiveTab("settings")}
+              >
+                Settings
+              </TabButton>
+            </TabsBar>
+            {activeTab === "profile" && (
+              <>
+                <ProfileAbout user={user} />
+                <ContentSection>
+                  <SectionHeader>
+                    <SectionTitleStyled>🎬 Recent Activity</SectionTitleStyled>
+                  </SectionHeader>
+                  {recentMovies.length > 0 ? (
+                    <MoviesGrid
+                      initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.1 }}
+                      transition={{ duration: 0.5 }}
                     >
-                      <MovieCard movie={movie} />
-                    </motion.div>
-                  ))}
-                </MoviesGrid>
-              ) : (
-                <EmptyState>
-                  <EmptyIcon>🎬</EmptyIcon>
-                  <EmptyTitle>No recent activity</EmptyTitle>
-                  <EmptyText>Start watching movies to see them here</EmptyText>
-                </EmptyState>
-              )}
-            </ContentSection>
+                      {recentMovies.map((movie, index) => (
+                        <motion.div
+                          key={movie.id}
+                          initial={{ opacity: 0, y: 30 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.1 }}
+                        >
+                          <MovieCard movie={movie} />
+                        </motion.div>
+                      ))}
+                    </MoviesGrid>
+                  ) : (
+                    <EmptyState>
+                      <EmptyIcon>🎬</EmptyIcon>
+                      <EmptyTitle>No recent activity</EmptyTitle>
+                      <EmptyText>
+                        Start watching movies to see them here
+                      </EmptyText>
+                    </EmptyState>
+                  )}
+                </ContentSection>
+              </>
+            )}
+            {activeTab === "watchlist" && (
+              <ContentSection>
+                <SectionHeader>
+                  <SectionTitleStyled>📺 Watchlist</SectionTitleStyled>
+                </SectionHeader>
+                <MovieList
+                  movies={watchlist}
+                  emptyIcon="📺"
+                  emptyTitle="No movies in your watchlist"
+                  emptyText="Add movies to your watchlist to see them here"
+                />
+              </ContentSection>
+            )}
+            {activeTab === "recommendations" && (
+              <ContentSection>
+                <SectionHeader>
+                  <SectionTitleStyled>✨ Recommendations</SectionTitleStyled>
+                </SectionHeader>
+                <MovieList
+                  movies={recommendations}
+                  emptyIcon="✨"
+                  emptyTitle="No recommendations yet"
+                  emptyText="Get recommendations by watching and rating movies"
+                />
+              </ContentSection>
+            )}
+            {activeTab === "settings" && (
+              <ContentSection>
+                <SectionHeader>
+                  <SectionTitleStyled>
+                    <Settings size={20} />
+                    Settings
+                  </SectionTitleStyled>
+                </SectionHeader>
+                <SettingsForm user={user} onSave={handleSaveSettings} />
+                {settingsSaved && (
+                  <div style={{ color: "#06b6d4", marginTop: "1rem" }}>
+                    Settings saved!
+                  </div>
+                )}
+              </ContentSection>
+            )}
           </ProfileContent>
         </ProfileGrid>
       </Section>
