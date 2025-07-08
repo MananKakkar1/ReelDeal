@@ -13,7 +13,7 @@ const Nav = styled.nav`
   border-bottom: 1px solid rgba(148, 163, 184, 0.1);
   position: sticky;
   top: 0;
-  z: 50;
+  z-index: 9999;
   transition: all 0.3s ease;
 `;
 
@@ -51,6 +51,8 @@ const NavLinks = styled.div`
     display: flex;
     align-items: center;
     gap: 2rem;
+    flex-wrap: wrap;
+    overflow-x: visible;
   }
 `;
 
@@ -263,23 +265,22 @@ const MobileMenuButton = styled.button`
 `;
 
 const MobileMenu = styled(motion.div)`
-  position: fixed;
+  position: absolute;
+  z-index: 9998;
   top: 4rem;
   left: 0;
   right: 0;
-  bottom: 0;
   background: rgba(15, 23, 42, 0.98);
   backdrop-filter: blur(20px);
-  z-index: 40;
   padding: 2rem 1rem;
-  overflow-y: auto;
+  min-height: unset;
+  height: auto;
+  display: flex;
+  flex-direction: column;
 
   @media (min-width: 768px) {
     display: none;
   }
-
-  /* Ensure proper scrolling on mobile */
-  -webkit-overflow-scrolling: touch;
 `;
 
 const MobileNavLinks = styled.div`
@@ -485,8 +486,8 @@ const Navbar = () => {
               </MobileSearchContainer>
 
               <MobileNavLinks>
-                <MobileNavLink 
-                  to="/" 
+                <MobileNavLink
+                  to="/"
                   className={isActive("/") ? "active" : ""}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >

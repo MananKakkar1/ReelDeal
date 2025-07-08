@@ -246,15 +246,17 @@ const InfoIcon = styled.div`
 
 const TabsBar = styled.div`
   display: flex;
+  flex-wrap: wrap;
   gap: 2rem;
   border-bottom: 1px solid rgba(148, 163, 184, 0.15);
   margin-bottom: 2rem;
-  overflow-x: auto;
   padding-bottom: 0.5rem;
 
   @media (max-width: 640px) {
     gap: 1rem;
     margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
   }
 `;
 
@@ -264,12 +266,14 @@ const TabButton = styled.button`
   color: ${({ active }) => (active ? "#06b6d4" : "#94a3b8")};
   font-size: 1.1rem;
   font-weight: 600;
-  padding: 0.75rem 0;
+  padding: 0.75rem 0.75rem;
   border-bottom: 2.5px solid
     ${({ active }) => (active ? "#06b6d4" : "transparent")};
   cursor: pointer;
   transition: color 0.2s, border-bottom 0.2s;
-  white-space: nowrap;
+  white-space: normal;
+  min-width: 80px;
+  text-align: center;
 
   &:hover {
     color: #06b6d4;
@@ -277,7 +281,8 @@ const TabButton = styled.button`
 
   @media (max-width: 640px) {
     font-size: 1rem;
-    padding: 0.5rem 0;
+    padding: 0.5rem 0.5rem;
+    min-width: 70px;
   }
 `;
 
