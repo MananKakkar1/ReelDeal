@@ -661,11 +661,8 @@ function WatchedMovies() {
     try {
       await moviesAPI.rateMovie(movieId, {
         watched: false,
-        rating: 0,
-        review: "",
       });
-
-      setWatchedMovies(watchedMovies.filter((movie) => movie.id !== movieId));
+      setWatchedMovies((prev) => prev.filter((movie) => movie.id !== movieId));
       toast.success("Removed from watched list");
     } catch (error) {
       console.error("Error removing from watched:", error);
