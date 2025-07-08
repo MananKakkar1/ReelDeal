@@ -92,7 +92,7 @@ export const usersAPI = {
     } else if (typeof pageOrParams === 'object' && pageOrParams !== null) {
       params = { ...pageOrParams };
     }
-    return api.get('/users/recommendations', { params });
+    return api.get('/users/user/recommendations', { params });
   },
   // Current user endpoints
   getCurrentUserWatchlist: (params = {}) => api.get('/users/user/watchlist', { params }),

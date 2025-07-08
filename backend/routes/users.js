@@ -294,7 +294,7 @@ router.put('/profile', authenticateToken, async (req, res) => {
 });
 
 // Get personalized recommendations
-router.get('/recommendations', authenticateToken, async (req, res) => {
+router.get('/user/recommendations', authenticateToken, async (req, res) => {
   try {
     const { page = 1, limit = 20 } = req.query;
 
