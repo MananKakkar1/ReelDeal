@@ -264,6 +264,11 @@ const Requirement = styled.div`
   }
 `;
 
+const InputWrapper = styled.div`
+  position: relative;
+  width: 100%;
+`;
+
 function Register() {
   const [formData, setFormData] = useState({
     username: "",
@@ -407,23 +412,25 @@ function Register() {
           </FormGroup>
 
           <FormGroup>
-            <InputIcon>
-              <Lock size={20} />
-            </InputIcon>
-            <Input
-              type={showPassword ? "text" : "password"}
-              name="password"
-              placeholder="Password"
-              value={formData.password}
-              onChange={handleChange}
-              required
-            />
-            <PasswordToggle
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-            >
-              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-            </PasswordToggle>
+            <InputWrapper>
+              <InputIcon>
+                <Lock size={20} />
+              </InputIcon>
+              <Input
+                type={showPassword ? "text" : "password"}
+                name="password"
+                placeholder="Password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+              />
+              <PasswordToggle
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </PasswordToggle>
+            </InputWrapper>
             {formData.password && (
               <>
                 <PasswordStrength strength={passwordStrength}>
@@ -463,23 +470,25 @@ function Register() {
           </FormGroup>
 
           <FormGroup>
-            <InputIcon>
-              <Lock size={20} />
-            </InputIcon>
-            <Input
-              type={showConfirmPassword ? "text" : "password"}
-              name="confirmPassword"
-              placeholder="Confirm password"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              required
-            />
-            <PasswordToggle
-              type="button"
-              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-            >
-              {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-            </PasswordToggle>
+            <InputWrapper>
+              <InputIcon>
+                <Lock size={20} />
+              </InputIcon>
+              <Input
+                type={showConfirmPassword ? "text" : "password"}
+                name="confirmPassword"
+                placeholder="Confirm password"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                required
+              />
+              <PasswordToggle
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              >
+                {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </PasswordToggle>
+            </InputWrapper>
           </FormGroup>
 
           <RegisterButton type="submit" disabled={loading}>
