@@ -371,11 +371,19 @@ function Recommendations() {
         );
       }
     } catch (error) {
+      const backendData = error?.response?.data;
       console.error(
         "[Recommendations] Error generating recommendations:",
         error,
-        error?.response?.data
+        backendData
       );
+      if (backendData && backendData.errors) {
+        backendData.errors.forEach((err) => {
+          console.error(
+            `[Recommendations] Validation error: field=${err.field}, message=${err.message}, value=${err.value}`
+          );
+        });
+      }
       // Fallback to mock recommendations on error
       const mockRecommendations = generateMockRecommendations();
       setRecommendations(mockRecommendations);
