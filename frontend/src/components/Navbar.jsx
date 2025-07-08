@@ -277,6 +277,9 @@ const MobileMenu = styled(motion.div)`
   @media (min-width: 768px) {
     display: none;
   }
+
+  /* Ensure proper scrolling on mobile */
+  -webkit-overflow-scrolling: touch;
 `;
 
 const MobileNavLinks = styled.div`
@@ -482,12 +485,17 @@ const Navbar = () => {
               </MobileSearchContainer>
 
               <MobileNavLinks>
-                <MobileNavLink to="/" className={isActive("/") ? "active" : ""}>
+                <MobileNavLink 
+                  to="/" 
+                  className={isActive("/") ? "active" : ""}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
                   Home
                 </MobileNavLink>
                 <MobileNavLink
                   to="/search"
                   className={isActive("/search") ? "active" : ""}
+                  onClick={() => setIsMobileMenuOpen(false)}
                 >
                   Search
                 </MobileNavLink>
@@ -496,30 +504,35 @@ const Navbar = () => {
                     <MobileNavLink
                       to="/watchlist"
                       className={isActive("/watchlist") ? "active" : ""}
+                      onClick={() => setIsMobileMenuOpen(false)}
                     >
                       Watchlist
                     </MobileNavLink>
                     <MobileNavLink
                       to="/watched"
                       className={isActive("/watched") ? "active" : ""}
+                      onClick={() => setIsMobileMenuOpen(false)}
                     >
                       Watched
                     </MobileNavLink>
                     <MobileNavLink
                       to="/recommendations"
                       className={isActive("/recommendations") ? "active" : ""}
+                      onClick={() => setIsMobileMenuOpen(false)}
                     >
                       Recommendations
                     </MobileNavLink>
                     <MobileNavLink
                       to="/profile?tab=profile"
                       className={isActive("/profile") ? "active" : ""}
+                      onClick={() => setIsMobileMenuOpen(false)}
                     >
                       Profile
                     </MobileNavLink>
                     <MobileNavLink
                       to="/profile?tab=settings"
                       className={isActive("/profile") ? "active" : ""}
+                      onClick={() => setIsMobileMenuOpen(false)}
                     >
                       Settings
                     </MobileNavLink>

@@ -31,13 +31,17 @@ const ProfileHeader = styled.div`
 `;
 
 const ProfileTitle = styled.h1`
-  font-size: 3rem;
+  font-size: 2.5rem;
   font-weight: 900;
   margin-bottom: 1rem;
   background: linear-gradient(135deg, #06b6d4 0%, #2563eb 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+
+  @media (max-width: 640px) {
+    font-size: 2rem;
+  }
 `;
 
 const ProfileSubtitle = styled.p`
@@ -85,6 +89,13 @@ const Avatar = styled.div`
   color: white;
   font-weight: 700;
   box-shadow: 0 8px 32px rgba(6, 182, 212, 0.3);
+
+  @media (max-width: 640px) {
+    width: 80px;
+    height: 80px;
+    font-size: 2rem;
+    margin-bottom: 1rem;
+  }
 `;
 
 const UserName = styled.h2`
@@ -185,6 +196,11 @@ const MoviesGrid = styled(motion.div)`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 1.5rem;
+
+  @media (max-width: 640px) {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 1rem;
+  }
 `;
 
 const EmptyState = styled.div`
@@ -233,6 +249,13 @@ const TabsBar = styled.div`
   gap: 2rem;
   border-bottom: 1px solid rgba(148, 163, 184, 0.15);
   margin-bottom: 2rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+
+  @media (max-width: 640px) {
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
 `;
 
 const TabButton = styled.button`
@@ -246,9 +269,15 @@ const TabButton = styled.button`
     ${({ active }) => (active ? "#06b6d4" : "transparent")};
   cursor: pointer;
   transition: color 0.2s, border-bottom 0.2s;
+  white-space: nowrap;
 
   &:hover {
     color: #06b6d4;
+  }
+
+  @media (max-width: 640px) {
+    font-size: 1rem;
+    padding: 0.5rem 0;
   }
 `;
 
@@ -267,6 +296,8 @@ function ProfileAbout({ user }) {
           alignItems: "center",
           gap: "2rem",
           marginBottom: "1.5rem",
+          flexDirection: window.innerWidth <= 640 ? "column" : "row",
+          textAlign: window.innerWidth <= 640 ? "center" : "left",
         }}
       >
         <Avatar>
