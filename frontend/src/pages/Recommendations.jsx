@@ -362,7 +362,7 @@ function Recommendations() {
         setRecommendations([]);
         setTotalPages(1);
         setTotalResults(0);
-        toast.info("No personalized recommendations found.");
+        toast("No personalized recommendations found.");
       }
     } catch (error) {
       const backendData = error?.response?.data;
@@ -382,7 +382,7 @@ function Recommendations() {
       setRecommendations([]);
       setTotalPages(1);
       setTotalResults(0);
-      toast.info("No personalized recommendations found.");
+      toast("No personalized recommendations found.");
     } finally {
       setLoading(false);
     }
