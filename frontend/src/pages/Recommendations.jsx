@@ -320,6 +320,7 @@ function Recommendations() {
   };
 
   const generateRecommendations = async (page = 1) => {
+    if (typeof page !== "number" || isNaN(page)) page = 1;
     if (!userPreferences || userPreferences.watchedMovies.length === 0) {
       toast.error("Please add some movies to your watched list first!");
       return;
@@ -380,6 +381,7 @@ function Recommendations() {
   };
 
   const handlePageChange = (page) => {
+    if (typeof page !== "number" || isNaN(page)) return;
     setCurrentPage(page);
     generateRecommendations(page);
     window.scrollTo({ top: 0, behavior: "smooth" });
