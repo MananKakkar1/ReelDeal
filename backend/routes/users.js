@@ -298,11 +298,16 @@ router.get('/user/recommendations', authenticateToken, async (req, res) => {
   try {
     const { page = 1, limit = 20 } = req.query;
 
+    console.log('Getting recommendations for user:', req.user._id);
+
     // Get user's watched movies and their genres
     const userMovies = await Movie.find({
       'userRatings.user': req.user._id,
       'userRatings.watched': true
     });
+
+    console.log('User watched movies found:', userMovies.length);
+    console.log('User movies:', userMovies.map(m => ({ id: m.tmdbId, title: m.title, genres: m.genres })));
 
     if (userMovies.length === 0) {
       // If no watched movies, return popular movies
@@ -331,25 +336,51 @@ router.get('/user/recommendations', authenticateToken, async (req, res) => {
     // Get user's favorite genres
     const genreCounts = {};
     userMovies.forEach(movie => {
-      movie.genres.forEach(genre => {
-        genreCounts[genre] = (genreCounts[genre] || 0) + 1;
-      });
+      if (movie.genres && Array.isArray(movie.genres)) {
+        movie.genres.forEach(genre => {
+          genreCounts[genre] = (genreCounts[genre] || 0) + 1;
+        });
+      }
     });
+
+    console.log('Genre counts:', genreCounts);
 
     const favoriteGenres = Object.keys(genreCounts)
       .sort((a, b) => genreCounts[b] - genreCounts[a])
       .slice(0, 3);
 
+    console.log('Favorite genres:', favoriteGenres);
+
     // Get movies in favorite genres that user hasn't watched
     const watchedMovieIds = userMovies.map(m => m.tmdbId);
     
-    const recommendations = await Movie.find({
+    console.log('Watched movie IDs:', watchedMovieIds);
+    console.log('Looking for movies with genres:', favoriteGenres);
+
+    let recommendations = await Movie.find({
       tmdbId: { $nin: watchedMovieIds },
       genres: { $in: favoriteGenres },
       'stats.averageRating': { $gte: 6 }
     })
     .sort({ 'stats.averageRating': -1, popularity: -1 })
     .limit(parseInt(limit));
+
+    console.log('Recommendations found (with rating filter):', recommendations.length);
+
+    // If no recommendations found, try without the rating filter
+    if (recommendations.length === 0) {
+      console.log('No recommendations with rating filter, trying without rating filter...');
+      recommendations = await Movie.find({
+        tmdbId: { $nin: watchedMovieIds },
+        genres: { $in: favoriteGenres }
+      })
+      .sort({ voteAverage: -1 })
+      .limit(parseInt(limit));
+      
+      console.log('Recommendations found (without rating filter):', recommendations.length);
+    }
+
+    console.log('Final recommendations:', recommendations.map(m => ({ id: m.tmdbId, title: m.title, genres: m.genres })));
 
     const transformedMovies = recommendations.map(movie => {
       const matchScore = Math.floor(Math.random() * 20) + 80; // Random score 80-100
