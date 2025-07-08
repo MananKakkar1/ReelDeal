@@ -98,7 +98,7 @@ const movieSchema = new mongoose.Schema({
 });
 
 // Index for efficient queries (removed duplicate tmdbId index)
-movieSchema.index({ title: 'text', overview: 'text' });
+movieSchema.index({ title: 'text', overview: 'text' }, { default_language: 'english' });
 movieSchema.index({ genres: 1 });
 movieSchema.index({ releaseDate: -1 });
 movieSchema.index({ 'stats.averageRating': -1 });
@@ -124,8 +124,12 @@ movieSchema.methods.updateStats = function() {
   };
 };
 
-// Pre-save middleware to update stats
+// Pre-save middleware to update stats and fix unsupported language
 movieSchema.pre('save', function(next) {
+  // Fix unsupported language for text index
+  if (this.language && !['english', 'none', 'spanish', 'french', 'german', 'italian', 'russian', 'portuguese', 'turkish', 'arabic', 'danish', 'dutch', 'finnish', 'hungarian', 'norwegian', 'romanian', 'swedish', 'thai', 'chinese', 'japanese', 'korean', 'polish', 'czech', 'greek', 'hebrew', 'indonesian', 'malay', 'slovak', 'ukrainian', 'vietnamese', 'bulgarian', 'croatian', 'estonian', 'latvian', 'lithuanian', 'serbian', 'slovenian'].includes(this.language)) {
+    this.language = 'english';
+  }
   this.updateStats();
   next();
 });
