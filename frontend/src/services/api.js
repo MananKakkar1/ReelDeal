@@ -85,7 +85,15 @@ export const usersAPI = {
   unfollowUser: (userId) => api.delete(`/users/${userId}/follow`),
   getFollowers: (userId, params = {}) => api.get(`/users/${userId}/followers`, { params }),
   getFollowing: (userId, params = {}) => api.get(`/users/${userId}/following`, { params }),
-  getRecommendations: (params = {}) => api.get('/users/recommendations', { params }),
+  getRecommendations: (pageOrParams = 1) => {
+    let params = {};
+    if (typeof pageOrParams === 'number') {
+      params.page = pageOrParams;
+    } else if (typeof pageOrParams === 'object' && pageOrParams !== null) {
+      params = { ...pageOrParams };
+    }
+    return api.get('/users/recommendations', { params });
+  },
   // Current user endpoints
   getCurrentUserWatchlist: (params = {}) => api.get('/users/user/watchlist', { params }),
   getCurrentUserWatched: (params = {}) => api.get('/users/user/watched', { params }),

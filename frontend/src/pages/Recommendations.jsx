@@ -328,7 +328,7 @@ function Recommendations() {
     setLoading(true);
     try {
       // Get recommendations from backend API with pagination
-      const response = await usersAPI.getRecommendations({ page });
+      const response = await usersAPI.getRecommendations(page);
       const apiRecommendations = response.data.data?.recommendations || [];
       const paginationData = response.data.data?.pagination || {};
 
