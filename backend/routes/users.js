@@ -293,6 +293,94 @@ router.put('/profile', authenticateToken, async (req, res) => {
   }
 });
 
+// Get personalized recommendations
+router.get('/recommendations', authenticateToken, async (req, res) => {
+  try {
+    const { page = 1, limit = 20 } = req.query;
+
+    // Get user's watched movies and their genres
+    const userMovies = await Movie.find({
+      'userRatings.user': req.user._id,
+      'userRatings.watched': true
+    });
+
+    if (userMovies.length === 0) {
+      // If no watched movies, return popular movies
+      const popularMovies = await Movie.find()
+        .sort({ 'stats.averageRating': -1 })
+        .limit(parseInt(limit));
+      
+      const transformedMovies = popularMovies.map(movie => ({
+        id: movie.tmdbId,
+        title: movie.title || 'Unknown Title',
+        poster_path: movie.posterPath,
+        release_date: movie.releaseDate,
+        overview: movie.overview || '',
+        vote_average: movie.voteAverage || 0,
+        genres: movie.genres || [],
+        matchScore: Math.floor(Math.random() * 20) + 80, // Random score 80-100
+        matchReason: "Popular movie you might enjoy"
+      }));
+      
+      return res.json({
+        success: true,
+        data: transformedMovies
+      });
+    }
+
+    // Get user's favorite genres
+    const genreCounts = {};
+    userMovies.forEach(movie => {
+      movie.genres.forEach(genre => {
+        genreCounts[genre] = (genreCounts[genre] || 0) + 1;
+      });
+    });
+
+    const favoriteGenres = Object.keys(genreCounts)
+      .sort((a, b) => genreCounts[b] - genreCounts[a])
+      .slice(0, 3);
+
+    // Get movies in favorite genres that user hasn't watched
+    const watchedMovieIds = userMovies.map(m => m.tmdbId);
+    
+    const recommendations = await Movie.find({
+      tmdbId: { $nin: watchedMovieIds },
+      genres: { $in: favoriteGenres },
+      'stats.averageRating': { $gte: 6 }
+    })
+    .sort({ 'stats.averageRating': -1, popularity: -1 })
+    .limit(parseInt(limit));
+
+    const transformedMovies = recommendations.map(movie => {
+      const matchScore = Math.floor(Math.random() * 20) + 80; // Random score 80-100
+      const matchReason = `Based on your love for ${favoriteGenres[0]} movies`;
+      
+      return {
+        id: movie.tmdbId,
+        title: movie.title || 'Unknown Title',
+        poster_path: movie.posterPath,
+        release_date: movie.releaseDate,
+        overview: movie.overview || '',
+        vote_average: movie.voteAverage || 0,
+        genres: movie.genres || [],
+        matchScore,
+        matchReason
+      };
+    });
+
+    res.json({
+      success: true,
+      data: transformedMovies
+    });
+  } catch (error) {
+    console.error('Get recommendations error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch recommendations'
+    });
+  }
+});
+
 // Get user's watchlist
 router.get('/:userId/watchlist', validateUserId, optionalAuth, async (req, res) => {
   try {
@@ -635,94 +723,6 @@ router.get('/:userId/following', validateUserId, async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to fetch following'
-    });
-  }
-});
-
-// Get personalized recommendations
-router.get('/recommendations', authenticateToken, async (req, res) => {
-  try {
-    const { page = 1, limit = 20 } = req.query;
-
-    // Get user's watched movies and their genres
-    const userMovies = await Movie.find({
-      'userRatings.user': req.user._id,
-      'userRatings.watched': true
-    });
-
-    if (userMovies.length === 0) {
-      // If no watched movies, return popular movies
-      const popularMovies = await Movie.find()
-        .sort({ 'stats.averageRating': -1 })
-        .limit(parseInt(limit));
-      
-      const transformedMovies = popularMovies.map(movie => ({
-        id: movie.tmdbId,
-        title: movie.title || 'Unknown Title',
-        poster_path: movie.posterPath,
-        release_date: movie.releaseDate,
-        overview: movie.overview || '',
-        vote_average: movie.voteAverage || 0,
-        genres: movie.genres || [],
-        matchScore: Math.floor(Math.random() * 20) + 80, // Random score 80-100
-        matchReason: "Popular movie you might enjoy"
-      }));
-      
-      return res.json({
-        success: true,
-        data: transformedMovies
-      });
-    }
-
-    // Get user's favorite genres
-    const genreCounts = {};
-    userMovies.forEach(movie => {
-      movie.genres.forEach(genre => {
-        genreCounts[genre] = (genreCounts[genre] || 0) + 1;
-      });
-    });
-
-    const favoriteGenres = Object.keys(genreCounts)
-      .sort((a, b) => genreCounts[b] - genreCounts[a])
-      .slice(0, 3);
-
-    // Get movies in favorite genres that user hasn't watched
-    const watchedMovieIds = userMovies.map(m => m.tmdbId);
-    
-    const recommendations = await Movie.find({
-      tmdbId: { $nin: watchedMovieIds },
-      genres: { $in: favoriteGenres },
-      'stats.averageRating': { $gte: 6 }
-    })
-    .sort({ 'stats.averageRating': -1, popularity: -1 })
-    .limit(parseInt(limit));
-
-    const transformedMovies = recommendations.map(movie => {
-      const matchScore = Math.floor(Math.random() * 20) + 80; // Random score 80-100
-      const matchReason = `Based on your love for ${favoriteGenres[0]} movies`;
-      
-      return {
-        id: movie.tmdbId,
-        title: movie.title || 'Unknown Title',
-        poster_path: movie.posterPath,
-        release_date: movie.releaseDate,
-        overview: movie.overview || '',
-        vote_average: movie.voteAverage || 0,
-        genres: movie.genres || [],
-        matchScore,
-        matchReason
-      };
-    });
-
-    res.json({
-      success: true,
-      data: transformedMovies
-    });
-  } catch (error) {
-    console.error('Get recommendations error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch recommendations'
     });
   }
 });
