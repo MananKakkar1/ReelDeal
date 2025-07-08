@@ -331,7 +331,7 @@ function Profile() {
 
   useEffect(() => {
     if (activeTab === "watchlist") fetchWatchlist();
-    if (activeTab === "recommendations") fetchRecommendations();
+    if (activeTab === "recommendations") fetchRecommendations(1);
   }, [activeTab]);
 
   const fetchCurrentUser = async () => {
@@ -354,9 +354,9 @@ function Profile() {
     }
   };
 
-  const fetchRecommendations = async () => {
+  const fetchRecommendations = async (page = 1) => {
     try {
-      const response = await usersAPI.getRecommendations();
+      const response = await usersAPI.getRecommendations({ page });
       setRecommendations(response.data.data || []);
     } catch (error) {
       setRecommendations([]);
